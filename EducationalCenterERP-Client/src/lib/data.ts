@@ -6,21 +6,13 @@ export type Student = {
   fullName: string;
   phone: string;
   grade: string;
-  code: string; // محتوى الـ QR
+  code: string;
   createdAt: string;
 };
-
 export type Teacher = { id: string; fullName: string; phone: string };
 /** يقابل /api/classes في الـ API (مادة + مدرس + سعر). */
 export type Subject = { id: string; name: string; description: string };
 // export type Subject = { id: string; name: string; price: number; teacherId: string };
-export type Enrollment = {
-  id: string;
-  studentId: string;
-  courseClassId: string;
-  className: string;
-  monthlyFee: number;
-};
 export type Attendance = {
   id: string;
   studentId: string;
@@ -28,16 +20,42 @@ export type Attendance = {
   attendanceDate: string;
   status: string;
 };
-
 export type Payment = {
   id: string;
   studentId: string;
-  subjectId: string | null; // null = كل المواد
+  studentName: string;
   amount: number;
-  month: string;
-  date: string;
+  month: number;
+  year: number;
+  paymentMethod: string;
+  status: string;
+  paymentDate: string;
+  notes?: string;
 };
-
+export type CourseClass = {
+  id: string;
+  name: string;
+  subjectId?: string;
+  subject: string;
+  teacherId?: string;
+  teacher: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  hall: string;
+  maxStudents: number;
+  currentStudents: number;
+};
+export type Enrollment = {
+  id: string;
+  studentId: string;
+  studentName?: string;
+  courseClassId: string;
+  className: string;
+  monthlyFee: number;
+  enrollmentDate?: string;
+  isActive?: boolean;
+};
 export type DB = {
   students: Student[];
   teachers: Teacher[];
@@ -45,8 +63,8 @@ export type DB = {
   enrollments: Enrollment[];
   attendance: Attendance[];
   payments: Payment[];
+  courseClasses: CourseClass[];
 };
-
 export const emptyDb: DB = {
   students: [],
   teachers: [],
@@ -54,6 +72,7 @@ export const emptyDb: DB = {
   enrollments: [],
   attendance: [],
   payments: [],
+  courseClasses: [],
 };
 
 const str = (v: unknown, fallback = "") =>
@@ -73,7 +92,6 @@ function toStudent(raw: unknown): Student {
     ),
   };
 }
-
 function toTeacher(raw: unknown): Teacher {
   return {
     id: str(field(raw, "id", "teacherId")),
@@ -81,7 +99,6 @@ function toTeacher(raw: unknown): Teacher {
     phone: str(field(raw, "phone", "phoneNumber")),
   };
 }
-
 function toSubject(raw: unknown): Subject {
   return {
     id: str(field(raw, "id", "classId")),
@@ -89,21 +106,8 @@ function toSubject(raw: unknown): Subject {
     description: str(
       field(raw, "description", "classDescription", "subjectDescription"),
     ),
-    // price: num(field(raw, "price", "fee", "monthlyFee")),
-    // teacherId: str(field(raw, "teacherId")),
   };
 }
-
-function toEnrollment(raw: unknown): Enrollment {
-  return {
-    id: str(field(raw, "id", "studentClassId")),
-    studentId: str(field(raw, "studentId")),
-    courseClassId: str(field(raw, "courseClassId", "classId")),
-    className: str(field(raw, "className", "subjectName")),
-    monthlyFee: num(field(raw, "monthlyFee")),
-  };
-}
-
 function toAttendance(raw: unknown): Attendance {
   return {
     id: str(field(raw, "id", "attendanceId")),
@@ -116,20 +120,59 @@ function toAttendance(raw: unknown): Attendance {
     status: str(field(raw, "status"), "Present"),
   };
 }
-
 function toPayment(raw: unknown): Payment {
-  const classId = field(raw, "classId", "subjectId");
-  const date = str(
-    field(raw, "date", "paymentDate", "createdAt"),
-    new Date().toISOString(),
-  );
   return {
-    id: str(field(raw, "id", "paymentId")),
+    id: str(field(raw, "id")),
     studentId: str(field(raw, "studentId")),
-    subjectId: classId ? str(classId) : null,
-    amount: num(field(raw, "amount", "paidAmount")),
-    month: str(field(raw, "month"), date.slice(0, 7)),
-    date,
+    studentName: str(field(raw, "studentName")),
+    amount: num(field(raw, "amount")),
+    month: num(field(raw, "month")),
+    year: num(field(raw, "year")),
+    paymentMethod: str(field(raw, "paymentMethod")),
+    status: str(field(raw, "status")),
+    paymentDate: str(field(raw, "paymentDate")),
+    notes: str(field(raw, "notes")),
+  };
+}
+function toEnrollment(raw: unknown): Enrollment {
+  return {
+    id: str(field(raw, "id")),
+
+    studentId: str(field(raw, "studentId")),
+    studentName: str(field(raw, "studentName")),
+
+    courseClassId: str(field(raw, "courseClassId")),
+    className: str(field(raw, "className")),
+
+    monthlyFee: num(field(raw, "monthlyFee")),
+
+    enrollmentDate: str(field(raw, "enrollmentDate")),
+
+    isActive:
+      field(raw, "isActive") === undefined
+        ? true
+        : Boolean(field(raw, "isActive")),
+  };
+}
+function toCourseClass(raw: unknown): CourseClass {
+  return {
+    id: str(field(raw, "id")),
+    name: str(field(raw, "name")),
+
+    subjectId: str(field(raw, "subjectId")),
+    subject: str(field(raw, "subject")),
+
+    teacherId: str(field(raw, "teacherId")),
+    teacher: str(field(raw, "teacher")),
+
+    day: str(field(raw, "day")),
+    startTime: str(field(raw, "startTime")),
+    endTime: str(field(raw, "endTime")),
+
+    hall: str(field(raw, "hall")),
+
+    maxStudents: num(field(raw, "maxStudents")),
+    currentStudents: num(field(raw, "currentStudents")),
   };
 }
 
@@ -146,10 +189,11 @@ const list = async <T>(
 
 /** يحمّل كل البيانات من الـ API. */
 export async function fetchDb(): Promise<DB> {
-  const [students, teachers, subjects] = await Promise.all([
+  const [students, teachers, subjects, courseClasses] = await Promise.all([
     list("/students", toStudent),
     list("/teachers", toTeacher),
     list("/subjects", toSubject),
+    list("/course-classes", toCourseClass),
   ]);
 
   const [enrollmentsNested, attendanceNested, payments] = await Promise.all([
@@ -180,10 +224,31 @@ export async function fetchDb(): Promise<DB> {
     })),
   );
 
-  return { students, teachers, subjects, enrollments, attendance, payments };
+  return {
+    students,
+    teachers,
+    subjects,
+    enrollments,
+    attendance,
+    payments,
+    courseClasses,
+  };
 }
 
 const changed = () => window.dispatchEvent(new Event("db-change"));
+export const helpers = {
+  getStudentEnrollments(db: DB, studentId: string) {
+    return db.enrollments.filter((e) => e.studentId === studentId);
+  },
+
+  getClassStudents(db: DB, classId: string) {
+    return db.enrollments.filter((e) => e.courseClassId === classId);
+  },
+
+  getCourseClass(db: DB, id: string) {
+    return db.courseClasses.find((c) => c.id === id);
+  },
+};
 
 export const api = {
   async addStudent(
@@ -216,7 +281,6 @@ export const api = {
     await request("/subjects", {
       method: "POST",
       body: { name: input.name, description: input.description },
-      // body: { name: input.name, price: input.price, teacherId: input.teacherId },
     });
     changed();
   },
@@ -224,15 +288,20 @@ export const api = {
     await request(`/subjects/${id}`, { method: "DELETE" });
     changed();
   },
-  async enroll(studentId: string, subjectId: string) {
+  async enroll(studentId: string, courseClassId: string, monthlyFee: number) {
     await request("/student-classes", {
       method: "POST",
-      body: { studentId, courseClassId: subjectId },
+      body: {
+        studentId,
+        courseClassId,
+        monthlyFee,
+      },
     });
+
     changed();
   },
-  async unenroll(enrollmentId: string) {
-    await request(`/student-classes/${enrollmentId}`, {
+  async unenroll(id: string) {
+    await request(`/student-classes/${id}`, {
       method: "DELETE",
     });
 
@@ -285,7 +354,6 @@ export const api = {
       return null;
     }
   },
-
   async findByStudentID(id: string): Promise<Student | null> {
     try {
       const found = await request<unknown>(
@@ -298,7 +366,6 @@ export const api = {
       return null;
     }
   },
-
   async findByStudentCode(code: string): Promise<Student | null> {
     try {
       const found = await request<unknown>(
@@ -310,12 +377,61 @@ export const api = {
       return null;
     }
   },
+  async addClass(input: {
+    name: string;
+    subjectId: string;
+    teacherId: string;
+    day: string;
+    startTime: string;
+    endTime: string;
+    hall: string;
+    maxStudents: number;
+  }) {
+    await request("/course-classes", {
+      method: "POST",
+      body: input,
+    });
+
+    changed();
+  },
+  async updateClass(
+    id: string,
+    input: {
+      name: string;
+      subjectId: string;
+      teacherId: string;
+      day: string;
+      startTime: string;
+      endTime: string;
+      hall: string;
+      maxStudents: number;
+    },
+  ) {
+    await request(`/course-classes/${id}`, {
+      method: "PUT",
+      body: input,
+    });
+
+    changed();
+  },
+  async removeClass(id: string) {
+    await request(`/course-classes/${id}`, {
+      method: "DELETE",
+    });
+
+    changed();
+  },
+  async getStudentClasses(studentId: string) {
+    return list(`/student-classes/student/${studentId}`, toEnrollment);
+  },
+  async getClasses() {
+    return list("/course-classes", toCourseClass);
+  },
   income() {
     return request<unknown>("/payments/income");
   },
 };
 
-// المصادقة عبر POST /api/auth/login
 const AUTH_KEY = "edu-center-auth";
 export const auth = {
   async login(userName: string, password: string) {
