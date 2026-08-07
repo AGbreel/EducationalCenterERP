@@ -1,13 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { Download, Plus, QrCode, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, QrCode, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -17,13 +26,14 @@ import {
 } from "@/components/ui/dialog";
 import { api, type Student } from "@/lib/data";
 import { useDb } from "@/lib/use-db";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_app/students")({
   head: () => ({
     meta: [
       { title: "تسجيل الطلاب و QR Code | منصّة السنتر" },
       {
-        fullName: "description",
+        name: "description",
         content: "سجّل طالب جديد، أنشئ له QR Code، وحدد المواد المشترك بها.",
       },
       { property: "og:title", content: "تسجيل الطلاب و QR Code" },
@@ -38,7 +48,14 @@ export const Route = createFileRoute("/_app/students")({
 
 function StudentsPage() {
   const db = useDb();
-  const [form, setForm] = useState({ fullName: "", phone: "", grade: "" });
+  const [form, setForm] = useState({
+    fullName: "",
+    phone: "",
+    parentPhone: "",
+    address: "",
+    school: "",
+    grade: "",
+  });
   const [qrStudent, setQrStudent] = useState<Student | null>(null);
 
   const [saving, setSaving] = useState(false);
@@ -46,10 +63,37 @@ function StudentsPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fullName.trim()) return;
+    if (form.fullName.length < 3) {
+      toast.error("اسم الطالب غير صحيح");
+      return;
+    }
+    if (form.phone.length != 11) {
+      toast.error("رقم الهاتف غير صحيح");
+      return;
+    }
+    if (form.parentPhone.length != 11) {
+      toast.error("رقم ولي الأمر غير صحيح");
+      return;
+    }
     setSaving(true);
     try {
-      const student = await api.addStudent({ ...form });
-      setForm({ fullName: "", phone: "", grade: "" });
+      const student = await api.addStudent({
+        fullName: form.fullName,
+        phone: form.phone,
+        parentPhone: form.parentPhone,
+        address: form.address,
+        school: form.school,
+        grade: form.grade,
+      });
+      setForm({
+        fullName: "",
+        phone: "",
+        grade: "",
+        parentPhone: "",
+        address: "",
+        school: "",
+      });
+
       setQrStudent(student);
       toast.success(`تم تسجيل ${student.fullName} وإنشاء كود ${student.code}`);
     } catch (err) {
@@ -68,6 +112,28 @@ function StudentsPage() {
     link.download = `${qrStudent.code}.png`;
     link.click();
   };
+  const grades = [
+    {
+      label: "المرحلة الإعدادية",
+      items: [
+        "الصف الأول الإعدادي",
+        "الصف الثاني الإعدادي",
+        "الصف الثالث الإعدادي",
+      ],
+    },
+    {
+      label: "المرحلة الثانوية",
+      items: [
+        "الصف الأول الثانوي",
+        "الصف الثاني الثانوي",
+        "الصف الثالث الثانوي",
+      ],
+    },
+  ];
+
+  useEffect(() => {
+    console.log(db.students);
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -102,13 +168,77 @@ function StudentsPage() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="grade">الصف الدراسي</Label>
+          <Label>رقم ولي الأمر</Label>
+
           <Input
-            id="grade"
-            value={form.grade}
-            onChange={(e) => setForm({ ...form, grade: e.target.value })}
-            placeholder="الثالث الثانوي"
+            value={form.parentPhone}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                parentPhone: e.target.value,
+              })
+            }
+            placeholder="01xxxxxxxxx"
           />
+        </div>
+        <div className="space-y-2">
+          <Label>المدرسة</Label>
+
+          <Input
+            value={form.school}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                school: e.target.value,
+              })
+            }
+            placeholder="اسم المدرسة"
+          />
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <Label>العنوان</Label>
+
+          <Input
+            value={form.address}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                address: e.target.value,
+              })
+            }
+            placeholder="عنوان الطالب"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="grade">الصف الدراسي</Label>
+
+          <Select
+            value={form.grade}
+            onValueChange={(value) =>
+              setForm((prev) => ({
+                ...prev,
+                grade: value,
+              }))
+            }
+          >
+            <SelectTrigger id="grade" className="w-full">
+              <SelectValue placeholder="اختر الصف الدراسي" />
+            </SelectTrigger>
+
+            <SelectContent>
+              {grades.map((group) => (
+                <SelectGroup key={group.label}>
+                  <SelectLabel>{group.label}</SelectLabel>
+
+                  {group.items.map((grade) => (
+                    <SelectItem key={grade} value={grade}>
+                      {grade}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-end">
           <Button type="submit" className="w-full" size="lg" disabled={saving}>
@@ -120,93 +250,114 @@ function StudentsPage() {
 
       <div className="space-y-4">
         {db.students.map((student) => {
-          const subjects = db.subjects;
-
+          const classes = db.courseClasses;
           const studentEnrollments = db.enrollments.filter(
             (e) => e.studentId === student.id,
           );
-
+          console.log(db.students);
           const enrolledIds = studentEnrollments.map((e) => e.courseClassId);
-
           return (
-            <div key={student.id} className="surface-card space-y-4 p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-bold">{student.fullName}</p>
+            <div
+              key={student.id}
+              className="surface-card rounded-xl border bg-card p-5 shadow-sm transition-all hover:shadow-md"
+            >
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                {/* بيانات الطالب */}
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-xl font-bold">{student.fullName}</h3>
 
-                  <p className="text-sm text-muted-foreground">
-                    {student.grade || "بدون صف"} · {student.phone || "بدون رقم"}
-                  </p>
+                    <Badge variant="secondary" className="mt-2 font-mono">
+                      {student.code}
+                    </Badge>
+                  </div>
 
-                  <Badge variant="secondary" className="mt-2 font-mono">
-                    {student.code}
-                  </Badge>
+                  <div className="grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
+                    <div>
+                      📱{" "}
+                      <span className="font-medium">
+                        {student.phone || "--"}
+                      </span>
+                    </div>
+
+                    <div>
+                      👨‍👦{" "}
+                      <span className="font-medium">
+                        {student.parentPhone || "--"}
+                      </span>
+                    </div>
+
+                    <div>
+                      🎓{" "}
+                      <span className="font-medium">
+                        {student.grade || "--"}
+                      </span>
+                    </div>
+
+                    <div>
+                      🏫{" "}
+                      <span className="font-medium">
+                        {student.school || "--"}
+                      </span>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      📍{" "}
+                      <span className="font-medium">
+                        {student.address || "--"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex gap-2">
+                {/* الأزرار */}
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     onClick={() => setQrStudent(student)}
                   >
-                    <QrCode className="size-4" />
-                    عرض QR
+                    <QrCode className="mr-2 h-4 w-4" />
+                    QR Code
                   </Button>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="حذف"
-                    onClick={() => {
-                      api
-                        .removeStudent(student.id)
-                        .then(() => toast.success("تم حذف الطالب"))
-                        .catch((err: Error) => toast.error(err.message));
-                    }}
-                  >
-                    <Trash2 className="size-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
 
-              <div>
-                <p className="mb-2 text-sm font-bold">المواد المشترك بها</p>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>حذف الطالب</AlertDialogTitle>
 
-                <div className="flex flex-wrap gap-4">
-                  {subjects.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      أضف مواد أولًا من صفحة المواد.
-                    </p>
-                  )}
+                        <AlertDialogDescription>
+                          هل تريد حذف
+                          <strong> {student.fullName} </strong>
+                          ؟
+                          <br />
+                          لن تستطيع استرجاع بياناته بعد الحذف.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
 
-                  {subjects.map((subject) => {
-                    const enrollment = studentEnrollments.find(
-                      (e) => e.courseClassId === subject.id,
-                    );
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
 
-                    return (
-                      <label
-                        key={subject.id}
-                        className="flex items-center gap-2 text-sm"
-                      >
-                        <Checkbox
-                          checked={enrolledIds.includes(subject.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              void api.enroll(student.id, subject.id);
-                            } else if (enrollment) {
-                              void api.unenroll(enrollment.id);
+                        <AlertDialogAction
+                          onClick={async () => {
+                            try {
+                              await api.removeStudent(student.id);
+                              toast.success("تم حذف الطالب");
+                            } catch (err) {
+                              toast.error((err as Error).message);
                             }
                           }}
-                        />
-
-                        {subject.name}
-
-                        <span className="text-muted-foreground">
-                          ({subject.description})
-                        </span>
-                      </label>
-                    );
-                  })}
+                        >
+                          حذف
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </div>

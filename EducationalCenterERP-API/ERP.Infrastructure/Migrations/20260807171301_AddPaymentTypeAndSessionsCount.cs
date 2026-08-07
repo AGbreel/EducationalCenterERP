@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ERP.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AddPaymentTypeAndSessionsCount : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -312,10 +312,11 @@ namespace ERP.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     StudentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     StudentClassId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     Month = table.Column<int>(type: "int", nullable: false),
                     Year = table.Column<int>(type: "int", nullable: false),
-                    Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PaymentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SessionsCount = table.Column<int>(type: "int", nullable: true),
                     PaymentMethod = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PaymentDate = table.Column<DateTime>(type: "datetime2", nullable: false),

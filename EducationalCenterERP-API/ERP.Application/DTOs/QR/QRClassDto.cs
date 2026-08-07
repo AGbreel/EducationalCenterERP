@@ -19,4 +19,5 @@ public class QRClassDto
     public bool IsPaid { get; set; }
 
     public decimal MonthlyFee { get; set; }
+    public Guid StudentClassId { get; set; }
 }

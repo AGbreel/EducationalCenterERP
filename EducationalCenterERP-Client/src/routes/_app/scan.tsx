@@ -14,6 +14,21 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api, type Student } from "@/lib/data";
 import { useDb } from "@/lib/use-db";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_app/scan")({
   head: () => ({
@@ -102,12 +117,41 @@ function ScanPage() {
     ? db.enrollments
         .filter((e) => e.studentId === student.id)
         .map((e) => ({
-          enrollmentId: e.id,
+          studentClassId: e.id,
           courseClassId: e.courseClassId,
           monthlyFee: e.monthlyFee,
-          subject: db.subjects.find((s) => s.id === e.courseClassId),
+          courseClass: db.courseClasses.find((c) => c.id === e.courseClassId),
         }))
-        .filter((x) => x.subject)
+        .filter((x) => x.courseClass)
+    : [];
+
+  const [openPayment, setOpenPayment] = useState(false);
+
+  const [selectedEnrollment, setSelectedEnrollment] = useState<{
+    studentClassId: string;
+    monthlyFee: number;
+    courseClass: any;
+  } | null>(null);
+
+  const [paymentType, setPaymentType] = useState<"Monthly" | "Session">(
+    "Monthly",
+  );
+  const [amount, setAmount] = useState("");
+  const [sessions, setSessions] = useState(1);
+  const [notes, setNotes] = useState("");
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+  const monthlyPaid =
+    selectedEnrollment != null &&
+    db.payments.some(
+      (p) =>
+        p.studentClassId === selectedEnrollment.studentClassId &&
+        p.paymentType === "Monthly" &&
+        p.month === currentMonth &&
+        p.year === currentYear,
+    );
+  const studentPayments = student
+    ? db.payments.filter((p) => p.studentId === student.id)
     : [];
 
   return (
@@ -196,95 +240,103 @@ function ScanPage() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="attendance" className="space-y-2 pt-4">
+                <TabsContent value="attendance" className="space-y-4 pt-4">
                   <p className="text-sm text-muted-foreground">
-                    اختر المادة لتسجيل الحضور:
+                    اختر الكلاس لتسجيل الحضور.
                   </p>
 
                   {studentEnrollments.length === 0 && (
                     <p className="text-sm text-muted-foreground">
-                      الطالب غير مشترك في أي مادة.
-                    </p>
-                  )}
-
-                  {studentEnrollments.map(({ courseClassId, subject }) => (
-                    <Button
-                      key={courseClassId}
-                      variant="outline"
-                      className="w-full justify-between"
-                      onClick={() => {
-                        api
-                          .markAttendance(student!.id, courseClassId)
-                          .then(() =>
-                            toast.success(
-                              `تم تسجيل حضور ${student!.fullName} في ${subject!.name}`,
-                            ),
-                          )
-                          .catch((err: Error) => toast.error(err.message));
-                      }}
-                    >
-                      <span>{subject!.name}</span>
-
-                      <span className="text-muted-foreground">
-                        {
-                          db.attendance.filter(
-                            (a) =>
-                              a.studentId === student!.id &&
-                              a.courseClassId === courseClassId,
-                          ).length
-                        }{" "}
-                        حضور
-                      </span>
-                    </Button>
-                  ))}
-                </TabsContent>
-
-                <TabsContent value="payment" className="space-y-2 pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    اختر المادة التي سيتم دفع رسومها.
-                  </p>
-
-                  {studentEnrollments.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      الطالب غير مشترك في أي مادة.
+                      الطالب غير مشترك في أي كلاس.
                     </p>
                   )}
 
                   {studentEnrollments.map(
-                    ({ enrollmentId, monthlyFee, subject }) => (
+                    ({ studentClassId, courseClassId, courseClass }) => (
                       <Button
-                        key={enrollmentId}
+                        key={studentClassId}
                         variant="outline"
-                        className="w-full justify-between"
-                        onClick={() => {
-                          const amount = Number(
-                            prompt(
-                              `قيمة الرسوم الافتراضية ${monthlyFee}\nأدخل المبلغ المطلوب`,
-                              monthlyFee.toString(),
-                            ),
-                          );
-
-                          if (!amount || amount <= 0) return;
-
-                          api
-                            .addPayment(
+                        className="h-auto w-full justify-between py-4"
+                        onClick={async () => {
+                          try {
+                            await api.markAttendance(
                               student!.id,
-                              enrollmentId,
-                              amount,
-                              "Cash",
-                              "",
-                            )
-                            .then(() =>
-                              toast.success(`تم تسجيل دفعة ${subject!.name}`),
-                            )
-                            .catch((err: Error) => toast.error(err.message));
+                              courseClassId,
+                            );
+
+                            toast.success(
+                              `تم تسجيل حضور ${student!.fullName} في ${courseClass!.name}`,
+                            );
+                          } catch (err) {
+                            toast.error((err as Error).message);
+                          }
                         }}
                       >
-                        <span>{subject!.name}</span>
+                        <div className="text-right">
+                          <p className="font-semibold">{courseClass!.name}</p>
 
-                        <span className="text-muted-foreground">
-                          {monthlyFee} ج.م
-                        </span>
+                          <p className="text-xs text-muted-foreground">
+                            {courseClass!.day} • {courseClass!.startTime} -{" "}
+                            {courseClass!.endTime}
+                          </p>
+                        </div>
+
+                        <Badge variant="secondary">
+                          {
+                            db.attendance.filter(
+                              (a) =>
+                                a.studentId === student!.id &&
+                                a.courseClassId === courseClassId,
+                            ).length
+                          }{" "}
+                          حضور
+                        </Badge>
+                      </Button>
+                    ),
+                  )}
+                </TabsContent>
+
+                <TabsContent value="payment" className="space-y-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    اختر الكلاس لتسجيل دفعة جديدة.
+                  </p>
+
+                  {studentEnrollments.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      الطالب غير مشترك في أي كلاس.
+                    </p>
+                  )}
+
+                  {studentEnrollments.map(
+                    ({ studentClassId, monthlyFee, courseClass }) => (
+                      <Button
+                        key={studentClassId}
+                        variant="outline"
+                        className="h-auto w-full justify-between py-4"
+                        onClick={() => {
+                          setSelectedEnrollment({
+                            studentClassId,
+                            monthlyFee,
+                            courseClass,
+                          });
+
+                          setPaymentType("Monthly");
+                          setAmount(monthlyFee.toString());
+                          setSessions(1);
+                          setNotes("");
+
+                          setOpenPayment(true);
+                        }}
+                      >
+                        <div className="text-right">
+                          <p className="font-semibold">{courseClass!.name}</p>
+
+                          <p className="text-xs text-muted-foreground">
+                            {courseClass!.day} • {courseClass!.startTime}
+                          </p>
+                        </div>
+
+                        <Badge>{monthlyFee} ج.م</Badge>
                       </Button>
                     ),
                   )}
@@ -294,7 +346,10 @@ function ScanPage() {
               <Button
                 variant="ghost"
                 className="w-full"
-                onClick={() => setStudent(null)}
+                onClick={() => {
+                  setStudent(null);
+                  setSelectedEnrollment(null);
+                }}
               >
                 مسح طالب آخر
               </Button>
@@ -302,6 +357,228 @@ function ScanPage() {
           )}
         </div>
       </div>
+      <Dialog open={openPayment} onOpenChange={setOpenPayment}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>تسجيل دفعة جديدة</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* الكلاس */}
+            <div>
+              <Label>الكلاس</Label>
+
+              <Input
+                value={selectedEnrollment?.courseClass?.name ?? ""}
+                disabled
+              />
+            </div>
+
+            {/* حالة الشهر */}
+            <div className="rounded-lg border p-3">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">حالة اشتراك هذا الشهر</span>
+
+                {monthlyPaid ? (
+                  <Badge className="bg-green-600">مدفوع</Badge>
+                ) : (
+                  <Badge variant="destructive">غير مدفوع</Badge>
+                )}
+              </div>
+            </div>
+
+            {/* نوع الدفع */}
+            <div>
+              <Label>نوع الدفع</Label>
+
+              <Select
+                value={paymentType}
+                onValueChange={(v) =>
+                  setPaymentType(v as "Monthly" | "Session")
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="Monthly">اشتراك شهرى</SelectItem>
+
+                  <SelectItem value="Session">بالحصة</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* عدد الحصص */}
+            {paymentType === "Session" && (
+              <div>
+                <Label>عدد الحصص</Label>
+
+                <Input
+                  type="number"
+                  value={sessions}
+                  onChange={(e) => setSessions(Number(e.target.value))}
+                />
+              </div>
+            )}
+
+            {/* المبلغ */}
+            <div>
+              <Label>المبلغ</Label>
+
+              <Input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
+
+            {/* الملاحظات */}
+            <div>
+              <Label>ملاحظات</Label>
+
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
+
+            {/* آخر المدفوعات */}
+            <div className="space-y-2">
+              <Label>آخر المدفوعات</Label>
+
+              {studentPayments
+                .filter(
+                  (p) =>
+                    p.studentClassId === selectedEnrollment?.studentClassId,
+                )
+                .sort(
+                  (a, b) =>
+                    new Date(b.paymentDate).getTime() -
+                    new Date(a.paymentDate).getTime(),
+                )
+                .slice(0, 5)
+                .map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="flex items-center justify-between rounded-lg border p-2"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {payment.paymentType === "Monthly"
+                          ? "اشتراك شهرى"
+                          : "بالحصة"}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {payment.month}/{payment.year}
+                      </p>
+                    </div>
+
+                    <Badge>{payment.amount} ج.م</Badge>
+                  </div>
+                ))}
+
+              {studentPayments.filter(
+                (p) => p.studentClassId === selectedEnrollment?.studentClassId,
+              ).length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  لا توجد مدفوعات حتى الآن.
+                </p>
+              )}
+            </div>
+
+            {/* زر التسجيل */}
+            <Button
+              className="w-full"
+              disabled={paymentType === "Monthly" && monthlyPaid}
+              onClick={async () => {
+                if (!selectedEnrollment || !student) return;
+
+                try {
+                  const dto: Parameters<typeof api.addPayment>[0] = {
+                    studentId: student.id,
+                    studentClassId: selectedEnrollment.studentClassId,
+                    amount: Number(amount),
+                    month: currentMonth,
+                    year: currentYear,
+                    paymentType,
+                    paymentMethod: "Cash",
+                    notes,
+                  };
+
+                  if (paymentType === "Session") {
+                    dto.sessionsCount = sessions;
+                  }
+                  await api.addPayment(dto);
+                  toast.success("تم تسجيل الدفع");
+                  setAmount(selectedEnrollment.monthlyFee.toString());
+                  await db.refresh();
+                  setAmount("");
+                  setNotes("");
+                  setSessions(1);
+                  setSelectedEnrollment(null);
+                  setOpenPayment(false);
+                } catch (err) {
+                  toast.error((err as Error).message);
+                }
+              }}
+            >
+              تسجيل الدفع
+            </Button>
+          </div>
+          {selectedEnrollment &&
+            (() => {
+              return (
+                <div className="rounded-lg border p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">حالة اشتراك هذا الشهر</span>
+
+                    {monthlyPaid ? (
+                      <Badge className="bg-green-600">مدفوع</Badge>
+                    ) : (
+                      <Badge variant="destructive">غير مدفوع</Badge>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          <div className="space-y-2">
+            <Label>آخر المدفوعات</Label>
+
+            {studentPayments
+              .filter(
+                (p) => p.studentClassId === selectedEnrollment?.studentClassId,
+              )
+              .sort(
+                (a, b) =>
+                  new Date(b.paymentDate).getTime() -
+                  new Date(a.paymentDate).getTime(),
+              )
+              .slice(0, 5)
+              .map((payment) => (
+                <div
+                  key={payment.id}
+                  className="flex items-center justify-between rounded-lg border p-2"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {payment.paymentType === "Monthly"
+                        ? "اشتراك شهرى"
+                        : "بالحصة"}
+                    </p>
+
+                    <p className="text-xs text-muted-foreground">
+                      {payment.month}/{payment.year}
+                    </p>
+                  </div>
+
+                  <Badge>{payment.amount} ج.م</Badge>
+                </div>
+              ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

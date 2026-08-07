@@ -10,9 +10,10 @@ namespace ERP.Application.DTOs.Attendance
     {
         public Guid Id { get; set; }
         public Guid StudentId { get; set; }
-        public string StudentName { get; set; } = string.Empty;
+        public string StudentName { get; set; } = "";
         public Guid CourseClassId { get; set; }
+        public string ClassName { get; set; } = "";
         public DateTime AttendanceDate { get; set; }
-        public string Status { get; set; } = string.Empty;
+        public string Status { get; set; } = "";
     }
 }

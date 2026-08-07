@@ -69,11 +69,12 @@ namespace ERP.Infrastructure.Services
                     x.StudentClassId == item.Id &&
                     x.Month == month &&
                     x.Year == year &&
-                    x.Status == "Paid");
+                    x.PaymentType == "Monthly");
 
                 result.Classes.Add(new QRClassDto
                 {
                     ClassId = item.CourseClassId,
+                    StudentClassId = item.Id,
                     ClassName = item.CourseClass.Name,
                     SubjectName = item.CourseClass.Subject.Name,
                     TeacherName = item.CourseClass.Teacher.FullName,

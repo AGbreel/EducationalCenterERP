@@ -54,5 +54,22 @@ namespace ERP.API.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            return Ok(await _service.GetAllAsync());
+        }
+
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var deleted = await _service.DeleteAsync(id);
+
+            if (!deleted)
+                return NotFound();
+
+            return NoContent();
+        }
     }
 }

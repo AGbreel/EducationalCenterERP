@@ -1,109 +1,183 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  BookOpen,
+  CalendarCheck,
+  CreditCard,
+  GraduationCap,
+  ScanLine,
+  UserRound,
+  Users,
+} from "lucide-react";
 
-import { BookOpen, CalendarCheck, CreditCard, ScanLine, UserRound, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
 import { useDb } from "@/lib/use-db";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
     meta: [
-      { title: "لوحة التحكم | منصّة السنتر" },
-      { name: "description", content: "نظرة شاملة على الطلاب والمدرسين والحضور والإيرادات." },
-      { property: "og:title", content: "لوحة التحكم | منصّة السنتر" },
-      { property: "og:description", content: "إحصائيات الطلاب والحضور والإيرادات لحظة بلحظة." },
+      {
+        title: "لوحة التحكم | Educational Center ERP",
+      },
+      {
+        name: "description",
+        content: "لوحة تحكم شاملة لإدارة السنتر.",
+      },
     ],
   }),
-  component: Dashboard,
+  component: DashboardPage,
 });
 
-function Dashboard() {
+function DashboardPage() {
   const db = useDb();
+
   const today = new Date().toDateString();
-  const todayAttendance = db.attendance.filter((a) => new Date(a.date).toDateString() === today);
-  const income = db.payments.reduce((sum, p) => sum + p.amount, 0);
+
+  const todayAttendance = db.attendance.filter(
+    (x) =>
+      new Date(x.attendanceDate).toDateString() === today &&
+      x.status === "Present",
+  );
+
+  const income = db.payments.reduce((sum, payment) => sum + payment.amount, 0);
 
   const stats = [
-    { label: "إجمالي الطلاب", value: db.students.length, icon: Users },
-    { label: "المدرسون", value: db.teachers.length, icon: UserRound },
-    { label: "المواد", value: db.subjects.length, icon: BookOpen },
-    { label: "حضور اليوم", value: todayAttendance.length, icon: CalendarCheck },
+    {
+      title: "إجمالي الطلاب",
+      value: db.students.length,
+      icon: Users,
+    },
+    {
+      title: "المدرسين",
+      value: db.teachers.length,
+      icon: UserRound,
+    },
+    {
+      title: "الكلاسات",
+      value: db.courseClasses.length,
+      icon: GraduationCap,
+    },
+    {
+      title: "المواد",
+      value: db.subjects.length,
+      icon: BookOpen,
+    },
+    {
+      title: "حضور اليوم",
+      value: todayAttendance.length,
+      icon: CalendarCheck,
+    },
+    {
+      title: "إجمالي الإيرادات",
+      value: `${income.toLocaleString()} ج.م`,
+      icon: CreditCard,
+    },
   ];
-
-  const chartData = db.subjects.map((s) => ({
-    name: s.name,
-    حضور: db.attendance.filter((a) => a.subjectId === s.id).length,
-    طلاب: db.enrollments.filter((e) => e.subjectId === s.id).length,
-  }));
 
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">لوحة التحكم</h1>
+
           <p className="mt-1 text-sm text-muted-foreground">
-            متابعة كاملة لنشاط السنتر: الطلاب، الحضور، والمصاريف.
+            متابعة الطلاب والحضور والإيرادات والكلاسات.
           </p>
         </div>
+
         <Button asChild size="lg">
           <Link to="/scan">
-            <ScanLine className="size-4" /> ابدأ السكان
+            <ScanLine className="size-4" />
+            بدء السكان
           </Link>
         </Button>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="surface-card flex items-center gap-4 p-5">
-            <span className="grid size-12 place-items-center rounded-xl bg-secondary text-secondary-foreground">
-              <Icon className="size-5" />
-            </span>
-            <div>
-              <p className="text-sm text-muted-foreground">{label}</p>
-              <p className="text-2xl font-bold">{value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {stats.map((item) => {
+          const Icon = item.icon;
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="surface-card p-5 lg:col-span-2">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-bold">الحضور والاشتراكات حسب المادة</h2>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <span className="size-3 rounded-sm bg-primary" /> طلاب
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="size-3 rounded-sm bg-accent" /> حضور
-              </span>
+          return (
+            <div
+              key={item.title}
+              className="surface-card flex items-center justify-between p-5 transition hover:-translate-y-1 hover:shadow-xl"
+            >
+              <div>
+                <p className="text-sm text-muted-foreground">{item.title}</p>
+
+                <h2 className="mt-2 text-3xl font-bold">{item.value}</h2>
+              </div>
+
+              <div className="rounded-2xl bg-primary/10 p-4">
+                <Icon className="size-7 text-primary" />
+              </div>
             </div>
+          );
+        })}
+      </section>
+      <section className="grid gap-6 lg:grid-cols-2">
+        {/* إحصائيات الكلاسات */}
+        <div className="surface-card p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold">نسبة إشغال الكلاسات</h2>
+
+              <p className="text-sm text-muted-foreground">
+                عدد الطلاب الحالي مقارنة بالحد الأقصى.
+              </p>
+            </div>
+
+            <Badge variant="secondary">{db.courseClasses.length} كلاس</Badge>
           </div>
-          <div className="space-y-4">
-            {chartData.length === 0 && (
-              <p className="text-sm text-muted-foreground">أضف مواد لعرض الإحصائيات.</p>
+
+          <div className="space-y-5">
+            {db.courseClasses.length === 0 && (
+              <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
+                لا توجد كلاسات حتى الآن.
+              </div>
             )}
-            {chartData.map((row) => {
-              const max = Math.max(1, ...chartData.map((r) => Math.max(r.طلاب, r.حضور)));
+
+            {db.courseClasses.map((course) => {
+              const percent =
+                course.maxStudents === 0
+                  ? 0
+                  : Math.min(
+                      100,
+                      Math.round(
+                        (course.currentStudents / course.maxStudents) * 100,
+                      ),
+                    );
+
               return (
-                <div key={row.name} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{row.name}</span>
-                    <span className="text-muted-foreground">
-                      {row.طلاب} طالب · {row.حضور} حضور
-                    </span>
+                <div key={course.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">{course.name}</h3>
+
+                      <p className="text-xs text-muted-foreground">
+                        {course.subject} • {course.teacher}
+                      </p>
+                    </div>
+
+                    <Badge>
+                      {course.currentStudents} / {course.maxStudents}
+                    </Badge>
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+
+                  <div className="h-3 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-primary"
-                      style={{ width: `${(row.طلاب / max) * 100}%` }}
+                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      style={{
+                        width: `${percent}%`,
+                      }}
                     />
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-accent"
-                      style={{ width: `${(row.حضور / max) * 100}%` }}
-                    />
+
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{course.hall}</span>
+
+                    <span>{percent}%</span>
                   </div>
                 </div>
               );
@@ -111,37 +185,230 @@ function Dashboard() {
           </div>
         </div>
 
-
-        <div className="surface-card space-y-4 p-5">
-          <div className="flex items-center gap-3">
-            <span className="grid size-11 place-items-center rounded-xl bg-accent-gradient text-accent-foreground">
-              <CreditCard className="size-5" />
-            </span>
+        {/* آخر الكلاسات */}
+        <div className="surface-card p-6">
+          <div className="mb-6 flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">إجمالي المصاريف المحصّلة</p>
-              <p className="text-2xl font-bold">{income.toLocaleString("ar-EG")} ج.م</p>
+              <h2 className="text-xl font-bold">الكلاسات الحالية</h2>
+
+              <p className="text-sm text-muted-foreground">
+                نظرة سريعة على الجدول.
+              </p>
             </div>
+
+            <Badge variant="outline">{db.courseClasses.length}</Badge>
           </div>
-          <div className="space-y-2">
-            <h3 className="text-sm font-bold">آخر العمليات</h3>
-            {db.payments.length === 0 && db.attendance.length === 0 && (
-              <p className="text-sm text-muted-foreground">لا توجد عمليات بعد — ابدأ بمسح QR طالب.</p>
-            )}
-            {db.payments.slice(0, 3).map((p) => (
-              <div key={p.id} className="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-sm">
-                <span>{db.students.find((s) => s.id === p.studentId)?.name ?? "طالب"}</span>
-                <Badge variant="secondary">{p.amount} ج.م</Badge>
+
+          <div className="space-y-4">
+            {db.courseClasses.length === 0 && (
+              <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
+                لا توجد كلاسات.
               </div>
-            ))}
-            {db.attendance.slice(0, 3).map((a) => (
-              <div key={a.id} className="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-sm">
-                <span>{db.students.find((s) => s.id === a.studentId)?.name ?? "طالب"}</span>
-                <Badge>{db.subjects.find((s) => s.id === a.subjectId)?.name ?? "حضور"}</Badge>
+            )}
+
+            {db.courseClasses.map((course) => (
+              <div
+                key={course.id}
+                className="flex items-center justify-between rounded-xl border p-4 transition hover:bg-muted/40"
+              >
+                <div>
+                  <h3 className="font-semibold">{course.name}</h3>
+
+                  <p className="text-sm text-muted-foreground">
+                    {course.subject}
+                  </p>
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {course.day} • {course.startTime} - {course.endTime}
+                  </p>
+                </div>
+
+                <div className="text-end">
+                  <Badge>{course.teacher}</Badge>
+
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {course.hall}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
+      <section className="grid gap-6 xl:grid-cols-2">
+        {/* آخر عمليات الحضور */}
+        <div className="surface-card p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold">آخر عمليات الحضور</h2>
+
+              <p className="text-sm text-muted-foreground">
+                أحدث عمليات تسجيل الحضور.
+              </p>
+            </div>
+
+            <Badge variant="secondary">{db.attendance.length}</Badge>
+          </div>
+
+          <div className="space-y-3">
+            {db.attendance.length === 0 && (
+              <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
+                لا يوجد حضور مسجل.
+              </div>
+            )}
+
+            {db.attendance.slice(0, 8).map((attendance) => (
+              <div
+                key={attendance.id}
+                className="flex items-center justify-between rounded-xl border p-4 transition hover:bg-muted/40"
+              >
+                <div>
+                  <h3 className="font-semibold">{attendance.studentName}</h3>
+
+                  <p className="text-sm text-muted-foreground">
+                    {attendance.className}
+                  </p>
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {new Date(attendance.attendanceDate).toLocaleString(
+                      "ar-EG",
+                    )}
+                  </p>
+                </div>
+
+                <Badge>{attendance.status}</Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* آخر المدفوعات */}
+        <div className="surface-card p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold">آخر المدفوعات</h2>
+
+              <p className="text-sm text-muted-foreground">
+                أحدث عمليات الدفع.
+              </p>
+            </div>
+
+            <Badge variant="secondary">{db.payments.length}</Badge>
+          </div>
+
+          <div className="space-y-3">
+            {db.payments.length === 0 && (
+              <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
+                لا توجد مدفوعات حتى الآن.
+              </div>
+            )}
+
+            {db.payments.slice(0, 8).map((payment) => {
+              const student = db.students.find(
+                (x) => x.id === payment.studentId,
+              );
+
+              return (
+                <div
+                  key={payment.id}
+                  className="flex items-center justify-between rounded-xl border p-4 transition hover:bg-muted/40"
+                >
+                  <div>
+                    <h3 className="font-semibold">
+                      {student?.fullName ?? "طالب"}
+                    </h3>
+
+                    <p className="text-sm text-muted-foreground">
+                      {payment.month}
+                    </p>
+
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {new Date(payment.date).toLocaleString("ar-EG")}
+                    </p>
+                  </div>
+
+                  <Badge className="text-base">{payment.amount} ج.م</Badge>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+      <section className="grid gap-6 lg:grid-cols-2">
+        {/* إجراءات سريعة */}
+        <div className="surface-card p-6">
+          <h2 className="mb-6 text-xl font-bold">إجراءات سريعة</h2>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Button asChild variant="outline" className="h-24 flex-col gap-2">
+              <Link to="/students">
+                <Users className="size-7" />
+                إضافة طالب
+              </Link>
+            </Button>
+
+            <Button asChild variant="outline" className="h-24 flex-col gap-2">
+              <Link to="/teachers">
+                <UserRound className="size-7" />
+                إضافة مدرس
+              </Link>
+            </Button>
+
+            <Button asChild variant="outline" className="h-24 flex-col gap-2">
+              <Link to="/classes">
+                <GraduationCap className="size-7" />
+                إنشاء كلاس
+              </Link>
+            </Button>
+
+            <Button asChild className="h-24 flex-col gap-2">
+              <Link to="/scan">
+                <ScanLine className="size-7" />
+                QR Scanner
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* ملخص النظام */}
+        <div className="surface-card p-6">
+          <h2 className="mb-6 text-xl font-bold">ملخص النظام</h2>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl bg-muted p-4">
+              <span className="font-medium">الطلاب المسجلون</span>
+
+              <Badge>{db.students.length}</Badge>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl bg-muted p-4">
+              <span className="font-medium">الاشتراكات</span>
+
+              <Badge>{db.enrollments.length}</Badge>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl bg-muted p-4">
+              <span className="font-medium">سجلات الحضور</span>
+
+              <Badge>{db.attendance.length}</Badge>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl bg-muted p-4">
+              <span className="font-medium">المدفوعات</span>
+
+              <Badge>{db.payments.length}</Badge>
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl bg-primary/10 p-4">
+              <span className="font-semibold">إجمالي الإيرادات</span>
+
+              <span className="text-xl font-bold text-primary">
+                {income.toLocaleString()} ج.م
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -7,5 +7,7 @@ namespace ERP.Application.Interfaces
         Task<bool> MarkAttendanceAsync(CreateAttendanceDto dto);
         Task<List<AttendanceDto>> GetStudentAttendanceAsync(Guid studentId);
         Task<List<AttendanceDto>> GetClassAttendanceAsync(Guid classId);
+        Task<List<AttendanceDto>> GetAllAsync();
+        Task<bool> DeleteAsync(Guid id);
     }
 }

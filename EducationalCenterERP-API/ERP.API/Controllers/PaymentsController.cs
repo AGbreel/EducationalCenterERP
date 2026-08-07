@@ -17,35 +17,93 @@ namespace ERP.API.Controllers
             _service = service;
         }
 
+
+        // إنشاء عملية دفع
         [HttpPost]
         public async Task<IActionResult> Create(CreatePaymentDto dto)
         {
-            var result = await _service.CreateAsync(dto);
-            return Ok(result);
+            try
+            {
+                var result = await _service.CreateAsync(dto);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
         }
 
-        [HttpGet("student/{studentId}")]
-        public async Task<IActionResult> GetStudentPayments(Guid studentId)
-        {
-            return Ok(await _service.GetStudentPayments(studentId));
-        }
 
-        [HttpGet("student/{studentId}/current")]
-        public async Task<IActionResult> GetCurrentMonth(Guid studentId)
-        {
-            return Ok(await _service.GetCurrentMonthPayment(studentId));
-        }
 
+        // جميع المدفوعات
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await _service.GetAllPayments());
+            var payments = await _service.GetAllAsync();
+
+            return Ok(payments);
         }
 
-        [HttpGet("income")]
-        public async Task<IActionResult> GetIncome(int month, int year)
+
+
+        // مدفوعات طالب
+        [HttpGet("student/{studentId}")]
+        public async Task<IActionResult> GetStudentPayments(Guid studentId)
         {
-            return Ok(await _service.GetMonthlyIncome(month, year));
+            var payments = await _service.GetStudentPaymentsAsync(studentId);
+
+            return Ok(payments);
+        }
+
+
+
+        // مدفوعات اشتراك معين
+        [HttpGet("class/{studentClassId}")]
+        public async Task<IActionResult> GetStudentClassPayments(Guid studentClassId)
+        {
+            var payments = await _service.GetStudentClassPaymentsAsync(studentClassId);
+
+            return Ok(payments);
+        }
+
+
+
+        // إجمالي الإيرادات
+        [HttpGet("income")]
+        public async Task<IActionResult> GetIncome()
+        {
+            var income = await _service.GetIncomeAsync();
+
+            return Ok(new
+            {
+                totalIncome = income
+            });
+        }
+
+
+
+        // حذف عملية دفع
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var result = await _service.DeleteAsync(id);
+
+            if (!result)
+            {
+                return NotFound(new
+                {
+                    message = "Payment not found"
+                });
+            }
+
+            return Ok(new
+            {
+                message = "Payment deleted successfully"
+            });
         }
     }
 }

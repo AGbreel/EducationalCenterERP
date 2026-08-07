@@ -133,30 +133,6 @@ function LoginPage() {
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? "جاري الدخول..." : "دخول"}
             </Button>
-            <div className="space-y-2 border-t border-border pt-4">
-              <Label htmlFor="apiBase" className="text-xs text-muted-foreground">
-                عنوان الـ API
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="apiBase"
-                  value={apiBase}
-                  onChange={(e) => setApiBase(e.target.value)}
-                  dir="ltr"
-                  className="font-mono text-xs"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    saveApiBase(apiBase);
-                    toast.success("تم حفظ عنوان الـ API");
-                  }}
-                >
-                  حفظ
-                </Button>
-              </div>
-            </div>
           </form>
         </div>
       </section>

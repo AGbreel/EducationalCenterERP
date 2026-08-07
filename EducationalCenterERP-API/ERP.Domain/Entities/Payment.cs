@@ -7,17 +7,25 @@ public class Payment : BaseEntity
     public Guid StudentId { get; set; }
     public Student Student { get; set; } = null!;
 
-    // الجديد
+    // الاشتراك الذي تم الدفع له
     public Guid StudentClassId { get; set; }
     public StudentClass StudentClass { get; set; } = null!;
 
+    public decimal Amount { get; set; }
+
+    // الشهر والسنة الخاصة بالاشتراك
     public int Month { get; set; }
 
     public int Year { get; set; }
 
-    public decimal Amount { get; set; }
+    /// <summary>
+    /// Monthly
+    /// Session
+    /// </summary>
+    public string PaymentType { get; set; } = "Monthly";
 
-    public string Status { get; set; } = null!;
+    // تستخدم فقط عند الدفع بالحصة
+    public int? SessionsCount { get; set; }
 
     public string PaymentMethod { get; set; } = "Cash";
 

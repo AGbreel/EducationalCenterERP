@@ -11,8 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppAttendanceRouteImport } from './routes/_app/attendance'
+import { Route as AppClassesRouteImport } from './routes/_app/classes'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppEnrollmentsRouteImport } from './routes/_app/enrollments'
+import { Route as AppPaymentsRouteImport } from './routes/_app/payments'
 import { Route as AppScanRouteImport } from './routes/_app/scan'
+import { Route as AppStudentEnrollmentRouteImport } from './routes/_app/student-enrollment'
 import { Route as AppStudentsRouteImport } from './routes/_app/students'
 import { Route as AppSubjectsRouteImport } from './routes/_app/subjects'
 import { Route as AppTeachersRouteImport } from './routes/_app/teachers'
@@ -26,14 +31,39 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppAttendanceRoute = AppAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClassesRoute = AppClassesRouteImport.update({
+  id: '/classes',
+  path: '/classes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEnrollmentsRoute = AppEnrollmentsRouteImport.update({
+  id: '/enrollments',
+  path: '/enrollments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPaymentsRoute = AppPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppScanRoute = AppScanRouteImport.update({
   id: '/scan',
   path: '/scan',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStudentEnrollmentRoute = AppStudentEnrollmentRouteImport.update({
+  id: '/student-enrollment',
+  path: '/student-enrollment',
   getParentRoute: () => AppRoute,
 } as any)
 const AppStudentsRoute = AppStudentsRouteImport.update({
@@ -54,16 +84,26 @@ const AppTeachersRoute = AppTeachersRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/attendance': typeof AppAttendanceRoute
+  '/classes': typeof AppClassesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/enrollments': typeof AppEnrollmentsRoute
+  '/payments': typeof AppPaymentsRoute
   '/scan': typeof AppScanRoute
+  '/student-enrollment': typeof AppStudentEnrollmentRoute
   '/students': typeof AppStudentsRoute
   '/subjects': typeof AppSubjectsRoute
   '/teachers': typeof AppTeachersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/attendance': typeof AppAttendanceRoute
+  '/classes': typeof AppClassesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/enrollments': typeof AppEnrollmentsRoute
+  '/payments': typeof AppPaymentsRoute
   '/scan': typeof AppScanRoute
+  '/student-enrollment': typeof AppStudentEnrollmentRoute
   '/students': typeof AppStudentsRoute
   '/subjects': typeof AppSubjectsRoute
   '/teachers': typeof AppTeachersRoute
@@ -72,8 +112,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/_app/attendance': typeof AppAttendanceRoute
+  '/_app/classes': typeof AppClassesRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/enrollments': typeof AppEnrollmentsRoute
+  '/_app/payments': typeof AppPaymentsRoute
   '/_app/scan': typeof AppScanRoute
+  '/_app/student-enrollment': typeof AppStudentEnrollmentRoute
   '/_app/students': typeof AppStudentsRoute
   '/_app/subjects': typeof AppSubjectsRoute
   '/_app/teachers': typeof AppTeachersRoute
@@ -81,15 +126,41 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/dashboard' | '/scan' | '/students' | '/subjects' | '/teachers'
+    | '/'
+    | '/attendance'
+    | '/classes'
+    | '/dashboard'
+    | '/enrollments'
+    | '/payments'
+    | '/scan'
+    | '/student-enrollment'
+    | '/students'
+    | '/subjects'
+    | '/teachers'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/scan' | '/students' | '/subjects' | '/teachers'
+  to:
+    | '/'
+    | '/attendance'
+    | '/classes'
+    | '/dashboard'
+    | '/enrollments'
+    | '/payments'
+    | '/scan'
+    | '/student-enrollment'
+    | '/students'
+    | '/subjects'
+    | '/teachers'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/_app/attendance'
+    | '/_app/classes'
     | '/_app/dashboard'
+    | '/_app/enrollments'
+    | '/_app/payments'
     | '/_app/scan'
+    | '/_app/student-enrollment'
     | '/_app/students'
     | '/_app/subjects'
     | '/_app/teachers'
@@ -116,6 +187,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/attendance': {
+      id: '/_app/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AppAttendanceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/classes': {
+      id: '/_app/classes'
+      path: '/classes'
+      fullPath: '/classes'
+      preLoaderRoute: typeof AppClassesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -123,11 +208,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/enrollments': {
+      id: '/_app/enrollments'
+      path: '/enrollments'
+      fullPath: '/enrollments'
+      preLoaderRoute: typeof AppEnrollmentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/payments': {
+      id: '/_app/payments'
+      path: '/payments'
+      fullPath: '/payments'
+      preLoaderRoute: typeof AppPaymentsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/scan': {
       id: '/_app/scan'
       path: '/scan'
       fullPath: '/scan'
       preLoaderRoute: typeof AppScanRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/student-enrollment': {
+      id: '/_app/student-enrollment'
+      path: '/student-enrollment'
+      fullPath: '/student-enrollment'
+      preLoaderRoute: typeof AppStudentEnrollmentRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/students': {
@@ -155,16 +261,26 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAttendanceRoute: typeof AppAttendanceRoute
+  AppClassesRoute: typeof AppClassesRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppEnrollmentsRoute: typeof AppEnrollmentsRoute
+  AppPaymentsRoute: typeof AppPaymentsRoute
   AppScanRoute: typeof AppScanRoute
+  AppStudentEnrollmentRoute: typeof AppStudentEnrollmentRoute
   AppStudentsRoute: typeof AppStudentsRoute
   AppSubjectsRoute: typeof AppSubjectsRoute
   AppTeachersRoute: typeof AppTeachersRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAttendanceRoute: AppAttendanceRoute,
+  AppClassesRoute: AppClassesRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppEnrollmentsRoute: AppEnrollmentsRoute,
+  AppPaymentsRoute: AppPaymentsRoute,
   AppScanRoute: AppScanRoute,
+  AppStudentEnrollmentRoute: AppStudentEnrollmentRoute,
   AppStudentsRoute: AppStudentsRoute,
   AppSubjectsRoute: AppSubjectsRoute,
   AppTeachersRoute: AppTeachersRoute,

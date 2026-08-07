@@ -1,4 +1,5 @@
-﻿using ERP.Application.DTOs.Students;
+﻿using ERP.Application.DTOs.Attendance;
+using ERP.Application.DTOs.Students;
 
 namespace ERP.Application.Interfaces
 {
@@ -10,5 +11,7 @@ namespace ERP.Application.Interfaces
         Task<StudentDto?> GetByQRAsync(string qrCode);
         Task<bool> DeleteAsync(Guid id);
         Task<StudentDto?> GetByCodeAsync(string sCode);
+        Task<StudentClassesLookupDto?> GetStudentClassesByCodeAsync(string code);
+        Task<StudentClassesLookupDto?> GetStudentClassesByQrAsync(string qr);
     }
 }

@@ -3,7 +3,7 @@ const BASE_KEY = "edu-center-api-base";
 const TOKEN_KEY = "edu-center-token";
 
 const DEFAULT_BASE =
-  (import.meta.env["VITE_API_BASE_URL"] as string | undefined) ?? "https://localhost:7121/api";
+  (import.meta.env["VITE_API_BASE_URL"] as string | undefined) ?? import.meta.env.VITE_API_URL ?? "https://localhost:7121/api";
 
 export function getApiBase(): string {
   if (typeof window === "undefined") return DEFAULT_BASE;

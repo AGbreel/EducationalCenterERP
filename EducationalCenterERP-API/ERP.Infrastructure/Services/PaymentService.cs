@@ -13,7 +13,6 @@ namespace ERP.Infrastructure.Services
 {
     public class PaymentService : IPaymentService
     {
-
         private readonly ERPDbContext _context;
 
         public PaymentService(ERPDbContext context)
@@ -23,127 +22,259 @@ namespace ERP.Infrastructure.Services
 
         public async Task<PaymentDto> CreateAsync(CreatePaymentDto dto)
         {
-            var student = await _context.Students.FirstOrDefaultAsync(x => x.Id == dto.StudentId);
-            if (student == null)
-                throw new Exception("Student not found");
+            // التأكد من وجود الطالب
+            var student = await _context.Students
+                .FirstOrDefaultAsync(x => x.Id == dto.StudentId);
 
-            var exists = await _context.Payments.AnyAsync(x => x.StudentClassId == dto.StudentClassId && x.Month == dto.Month && x.Year == dto.Year);
-            if (exists)
-                throw new Exception("Student already paid this month");
+            if (student == null)
+                throw new Exception("Student not found.");
+
+            // التأكد من وجود الاشتراك
+            var studentClass = await _context.StudentClasses
+                .Include(x => x.CourseClass)
+                    .ThenInclude(x => x.Subject)
+                .Include(x => x.CourseClass)
+                    .ThenInclude(x => x.Teacher)
+                .FirstOrDefaultAsync(x => x.Id == dto.StudentClassId);
+
+            if (studentClass == null)
+                throw new Exception("Student class not found.");
+
+            // التأكد أن الاشتراك يخص الطالب
+            if (studentClass.StudentId != dto.StudentId)
+                throw new Exception("Invalid student class.");
+            // في حالة الاشتراك الشهري امنع تكرار الدفع لنفس الشهر
+            if (dto.PaymentType.Equals("Monthly", StringComparison.OrdinalIgnoreCase))
+            {
+                var alreadyPaid = await _context.Payments.AnyAsync(x =>
+                    x.StudentClassId == dto.StudentClassId &&
+                    x.Month == dto.Month &&
+                    x.Year == dto.Year &&
+                    x.PaymentType == "Monthly");
+
+                if (alreadyPaid)
+                    throw new Exception("This month has already been paid.");
+            }
 
             var payment = new Payment
             {
                 Id = Guid.NewGuid(),
                 StudentId = dto.StudentId,
                 StudentClassId = dto.StudentClassId,
+                Amount = dto.Amount,
                 Month = dto.Month,
                 Year = dto.Year,
-                Amount = dto.Amount,
-                Status = "Paid",
+                PaymentType = dto.PaymentType,
+                SessionsCount = dto.SessionsCount,
                 PaymentMethod = dto.PaymentMethod,
                 Notes = dto.Notes,
-                PaymentDate = DateTime.UtcNow
+                PaymentDate = DateTime.Now
             };
 
             _context.Payments.Add(payment);
-            await _context.SaveChangesAsync();
 
+            await _context.SaveChangesAsync();
             return new PaymentDto
             {
                 Id = payment.Id,
+
+                StudentId = payment.StudentId,
                 StudentName = student.FullName,
-                Month = payment.Month,
-                Year = payment.Year,
+
+                StudentClassId = studentClass.Id,
+
+                CourseClassId = studentClass.CourseClassId,
+
+                ClassName = studentClass.CourseClass.Name,
+
+                SubjectName = studentClass.CourseClass.Subject.Name,
+
+                TeacherName = studentClass.CourseClass.Teacher.FullName,
+
                 Amount = payment.Amount,
-                Status = payment.Status,
-                PaymentDate = payment.PaymentDate,
+
+                Month = payment.Month,
+
+                Year = payment.Year,
+
+                PaymentType = payment.PaymentType,
+
+                SessionsCount = payment.SessionsCount,
+
                 PaymentMethod = payment.PaymentMethod,
-                Notes = payment.Notes
+
+                Notes = payment.Notes,
+
+                PaymentDate = payment.PaymentDate
             };
         }
-
-        public async Task<PaymentDto?> GetCurrentMonthPayment(Guid studentId)
+        public async Task<List<PaymentDto>> GetAllAsync()
         {
-            var month = DateTime.Now.Month;
-            var year = DateTime.Now.Year;
-
             return await _context.Payments
-                .Where(x =>
-                    x.StudentId == studentId &&
-                    x.Month == month &&
-                    x.Year == year)
+                .AsNoTracking()
+                .Include(x => x.Student)
+                .Include(x => x.StudentClass)
+                    .ThenInclude(x => x.CourseClass)
+                        .ThenInclude(x => x.Subject)
+                .Include(x => x.StudentClass)
+                    .ThenInclude(x => x.CourseClass)
+                        .ThenInclude(x => x.Teacher)
+                .OrderByDescending(x => x.PaymentDate)
                 .Select(x => new PaymentDto
                 {
                     Id = x.Id,
+
+                    StudentId = x.StudentId,
                     StudentName = x.Student.FullName,
-                    Month = x.Month,
-                    Year = x.Year,
+
+                    StudentClassId = x.StudentClassId,
+
+                    CourseClassId = x.StudentClass.CourseClassId,
+
+                    ClassName = x.StudentClass.CourseClass.Name,
+
+                    SubjectName = x.StudentClass.CourseClass.Subject.Name,
+
+                    TeacherName = x.StudentClass.CourseClass.Teacher.FullName,
+
                     Amount = x.Amount,
-                    Status = x.Status,
-                    PaymentDate = x.PaymentDate,
+
+                    Month = x.Month,
+
+                    Year = x.Year,
+
+                    PaymentType = x.PaymentType,
+
+                    SessionsCount = x.SessionsCount,
+
                     PaymentMethod = x.PaymentMethod,
-                    Notes = x.Notes
+
+                    Notes = x.Notes,
+
+                    PaymentDate = x.PaymentDate
                 })
-                .FirstOrDefaultAsync();
+                .ToListAsync();
         }
-
-        public async Task<List<PaymentDto>> GetStudentPayments(Guid studentId)
-        {
-            return await _context.Payments.Where(x => x.StudentId == studentId).OrderByDescending(x => x.PaymentDate)
-        .Select(x => new PaymentDto
-        {
-            Id = x.Id,
-            StudentName = x.Student.FullName,
-            Month = x.Month,
-            Year = x.Year,
-            Amount = x.Amount,
-            Status = x.Status,
-            PaymentDate = x.PaymentDate,
-            PaymentMethod = x.PaymentMethod,
-            Notes = x.Notes
-        })
-        .ToListAsync();
-        }
-
-        public async Task<List<PaymentDto>> GetAllPayments()
+        public async Task<List<PaymentDto>> GetStudentPaymentsAsync(Guid studentId)
         {
             return await _context.Payments
-        .Include(x => x.Student)
-        .OrderByDescending(x => x.PaymentDate)
-        .Select(x => new PaymentDto
-         {
-            Id = x.Id,
-            StudentName = x.Student.FullName,
-            Month = x.Month,
-            Year = x.Year,
-            Amount = x.Amount,
-            Status = x.Status,
-            PaymentDate = x.PaymentDate,
-            PaymentMethod = x.PaymentMethod,
-            Notes = x.Notes
-        })
-        .ToListAsync();
+                .AsNoTracking()
+                .Where(x => x.StudentId == studentId)
+                .Include(x => x.Student)
+                .Include(x => x.StudentClass)
+                    .ThenInclude(x => x.CourseClass)
+                        .ThenInclude(x => x.Subject)
+                .Include(x => x.StudentClass)
+                    .ThenInclude(x => x.CourseClass)
+                        .ThenInclude(x => x.Teacher)
+                .OrderByDescending(x => x.PaymentDate)
+                .Select(x => new PaymentDto
+                {
+                    Id = x.Id,
+
+                    StudentId = x.StudentId,
+                    StudentName = x.Student.FullName,
+
+                    StudentClassId = x.StudentClassId,
+
+                    CourseClassId = x.StudentClass.CourseClassId,
+
+                    ClassName = x.StudentClass.CourseClass.Name,
+
+                    SubjectName = x.StudentClass.CourseClass.Subject.Name,
+
+                    TeacherName = x.StudentClass.CourseClass.Teacher.FullName,
+
+                    Amount = x.Amount,
+
+                    Month = x.Month,
+
+                    Year = x.Year,
+
+                    PaymentType = x.PaymentType,
+
+                    SessionsCount = x.SessionsCount,
+
+                    PaymentMethod = x.PaymentMethod,
+
+                    Notes = x.Notes,
+
+                    PaymentDate = x.PaymentDate
+                })
+                .ToListAsync();
         }
 
-        public async Task<decimal> GetMonthlyIncome(int month, int year)
+
+        public async Task<List<PaymentDto>> GetStudentClassPaymentsAsync(Guid studentClassId)
         {
             return await _context.Payments
-        .Where(x =>
-            x.Month == month &&
-            x.Year == year &&
-            x.Status == "Paid")
-        .SumAsync(x => x.Amount);
+                .AsNoTracking()
+                .Where(x => x.StudentClassId == studentClassId)
+                .Include(x => x.Student)
+                .Include(x => x.StudentClass)
+                    .ThenInclude(x => x.CourseClass)
+                        .ThenInclude(x => x.Subject)
+                .Include(x => x.StudentClass)
+                    .ThenInclude(x => x.CourseClass)
+                        .ThenInclude(x => x.Teacher)
+                .OrderByDescending(x => x.PaymentDate)
+                .Select(x => new PaymentDto
+                {
+                    Id = x.Id,
+
+                    StudentId = x.StudentId,
+                    StudentName = x.Student.FullName,
+
+                    StudentClassId = x.StudentClassId,
+
+                    CourseClassId = x.StudentClass.CourseClassId,
+
+                    ClassName = x.StudentClass.CourseClass.Name,
+
+                    SubjectName = x.StudentClass.CourseClass.Subject.Name,
+
+                    TeacherName = x.StudentClass.CourseClass.Teacher.FullName,
+
+                    Amount = x.Amount,
+
+                    Month = x.Month,
+
+                    Year = x.Year,
+
+                    PaymentType = x.PaymentType,
+
+                    SessionsCount = x.SessionsCount,
+
+                    PaymentMethod = x.PaymentMethod,
+
+                    Notes = x.Notes,
+
+                    PaymentDate = x.PaymentDate
+                })
+                .ToListAsync();
         }
 
-        public async Task Delete(Guid id)
+
+        public async Task<decimal> GetIncomeAsync()
         {
-            var payment = await _context.Payments.FindAsync(id);
+            return await _context.Payments
+                .SumAsync(x => x.Amount);
+        }
+
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var payment = await _context.Payments
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (payment == null)
-                throw new Exception("Payment not found");
+                return false;
 
             _context.Payments.Remove(payment);
+
             await _context.SaveChangesAsync();
+
+            return true;
         }
     }
-}
+ }

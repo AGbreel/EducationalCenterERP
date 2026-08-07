@@ -1,149 +1,305 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { BookOpen, Plus, Trash2, Users } from "lucide-react";
+import { BookOpen, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/data";
 import { useDb } from "@/lib/use-db";
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-
-export const Route = createFileRoute("/app/classes")({
+export const Route = createFileRoute("/_app/classes")({
+  head: () => ({
+    meta: [
+      { title: "إدارة الكلاسات | منصة السنتر" },
+      {
+        name: "description",
+        content:
+          "إنشاء وإدارة الكلاسات وربطها بالمادة والمدرس وتحديد المواعيد والقاعة.",
+      },
+      {
+        property: "og:title",
+        content: "إدارة الكلاسات",
+      },
+      {
+        property: "og:description",
+        content: "إنشاء الكلاسات وتحديد المادة والمدرس ومواعيد الدراسة.",
+      },
+    ],
+  }),
   component: ClassesPage,
 });
 
 function ClassesPage() {
   const db = useDb();
 
-  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    subjectId: "",
+    teacherId: "",
+    day: "Saturday",
+    startTime: "",
+    endTime: "",
+    hall: "",
+    maxStudents: 20,
+  });
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+
+    try {
+      await api.addClass(form);
+
+      toast.success("تم إنشاء الكلاس");
+
+      setForm({
+        name: "",
+        subjectId: "",
+        teacherId: "",
+        day: "Saturday",
+        startTime: "",
+        endTime: "",
+        hall: "",
+        maxStudents: 20,
+      });
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  }
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">الكلاسات</h1>
+      <header>
+        <h1 className="text-3xl font-bold">إدارة الكلاسات</h1>
 
-          <p className="mt-1 text-sm text-muted-foreground">
-            إدارة الكلاسات الخاصة بالمواد.
-          </p>
-        </div>
-
-        <Button>
-          <Plus className="size-4" />
-          إضافة كلاس
-        </Button>
+        <p className="text-muted-foreground">إنشاء وإدارة كلاس لكل مادة.</p>
       </header>
 
-      {db.courseClasses.length === 0 ? (
-        <div className="surface-card p-12 text-center text-muted-foreground">
-          لا يوجد كلاسات حتى الآن.
+      <form
+        onSubmit={submit}
+        className="surface-card grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4"
+      >
+        <div className="space-y-2">
+          <Label>اسم الكلاس</Label>
+
+          <Input
+            value={form.name}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                name: e.target.value,
+              })
+            }
+          />
         </div>
-      ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {db.courseClasses.map((item) => (
-            <div
-              key={item.id}
-              className="surface-card space-y-4 rounded-xl p-5"
-            >
-              <div className="flex items-start justify-between">
-                <span className="grid size-12 place-items-center rounded-xl bg-primary/10">
-                  <BookOpen className="size-5" />
-                </span>
 
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  disabled={loadingId === item.id}
-                  onClick={async () => {
-                    if (!confirm("هل تريد حذف هذا الكلاس؟")) return;
+        <div className="space-y-2">
+          <Label>المادة</Label>
 
-                    try {
-                      setLoadingId(item.id);
+          <Select
+            value={form.subjectId}
+            onValueChange={(v) =>
+              setForm({
+                ...form,
+                subjectId: v,
+              })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="اختر المادة" />
+            </SelectTrigger>
 
-                      await api.removeClass(item.id);
+            <SelectContent>
+              {db.subjects.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-                      toast.success("تم حذف الكلاس");
-                    } catch (e) {
-                      toast.error(
-                        e instanceof Error ? e.message : "حدث خطأ"
-                      );
-                    } finally {
-                      setLoadingId(null);
-                    }
-                  }}
-                >
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
-              </div>
+        <div className="space-y-2">
+          <Label>المدرس</Label>
 
-              <div>
-                <h2 className="text-lg font-bold">
-                  {item.name}
-                </h2>
+          <Select
+            value={form.teacherId}
+            onValueChange={(v) =>
+              setForm({
+                ...form,
+                teacherId: v,
+              })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="اختر المدرس" />
+            </SelectTrigger>
 
-                <p className="text-sm text-muted-foreground">
-                  {item.subject}
-                </p>
-              </div>
+            <SelectContent>
+              {db.teachers.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.fullName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-              <div className="space-y-2 text-sm">
+        <div className="space-y-2">
+          <Label>اليوم</Label>
 
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    المدرس
-                  </span>
+          <Select
+            value={form.day}
+            onValueChange={(v) =>
+              setForm({
+                ...form,
+                day: v,
+              })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
 
-                  <span>{item.teacher}</span>
-                </div>
+            <SelectContent>
+              <SelectItem value="Saturday">السبت</SelectItem>
+              <SelectItem value="Sunday">الأحد</SelectItem>
+              <SelectItem value="Monday">الإثنين</SelectItem>
+              <SelectItem value="Tuesday">الثلاثاء</SelectItem>
+              <SelectItem value="Wednesday">الأربعاء</SelectItem>
+              <SelectItem value="Thursday">الخميس</SelectItem>
+              <SelectItem value="Friday">الجمعة</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    اليوم
-                  </span>
+        <div className="space-y-2">
+          <Label>بداية</Label>
 
-                  <span>{item.day}</span>
-                </div>
+          <Input
+            type="time"
+            value={form.startTime}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                startTime: e.target.value,
+              })
+            }
+          />
+        </div>
 
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    الوقت
-                  </span>
+        <div className="space-y-2">
+          <Label>نهاية</Label>
 
-                  <span>
-                    {item.startTime} - {item.endTime}
-                  </span>
-                </div>
+          <Input
+            type="time"
+            value={form.endTime}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                endTime: e.target.value,
+              })
+            }
+          />
+        </div>
 
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    القاعة
-                  </span>
+        <div className="space-y-2">
+          <Label>القاعة</Label>
 
-                  <span>{item.hall}</span>
-                </div>
+          <Input
+            value={form.hall}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                hall: e.target.value,
+              })
+            }
+          />
+        </div>
 
-              </div>
+        <div className="space-y-2">
+          <Label>الحد الأقصى</Label>
 
-              <div className="flex items-center justify-between pt-2">
+          <Input
+            type="number"
+            value={form.maxStudents}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                maxStudents: Number(e.target.value),
+              })
+            }
+          />
+        </div>
 
-                <Badge variant="secondary">
-                  <Users className="mr-1 size-3" />
-                  {item.currentStudents}/{item.maxStudents}
-                </Badge>
+        <div className="md:col-span-2 xl:col-span-4">
+          <Button className="w-full" type="submit">
+            <Plus className="mr-2 h-4 w-4" />
+            إنشاء الكلاس
+          </Button>
+        </div>
+      </form>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                >
-                  تعديل
-                </Button>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {db.courseClasses.map((c) => (
+          <div key={c.id} className="surface-card space-y-4 p-5">
+            <div className="flex items-start justify-between">
+              <span className="grid h-12 w-12 place-items-center rounded-xl bg-accent-gradient text-white">
+                <BookOpen className="h-5 w-5" />
+              </span>
 
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  api
+                    .removeClass(c.id)
+                    .then(() => toast.success("تم حذف الكلاس"))
+                    .catch((err: Error) => toast.error(err.message));
+                }}
+              >
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </Button>
             </div>
-          ))}
-        </div>
-      )}
+
+            <div>
+              <h2 className="text-lg font-bold">{c.name}</h2>
+
+              <p className="text-sm text-muted-foreground">{c.subject}</p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Badge>{c.teacher}</Badge>
+
+              <Badge variant="secondary">{c.day}</Badge>
+
+              <Badge variant="outline">
+                {c.startTime} - {c.endTime}
+              </Badge>
+            </div>
+
+            <div className="text-sm text-muted-foreground">
+              القاعة : {c.hall}
+            </div>
+
+            <div className="flex justify-between text-sm">
+              <span>الطلاب</span>
+
+              <span>
+                {c.currentStudents} / {c.maxStudents}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

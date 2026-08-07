@@ -134,9 +134,12 @@ namespace ERP.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Status")
+                    b.Property<string>("PaymentType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("SessionsCount")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("StudentClassId")
                         .HasColumnType("uniqueidentifier");

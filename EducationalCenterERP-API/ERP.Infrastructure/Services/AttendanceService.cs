@@ -70,6 +70,8 @@ namespace ERP.Infrastructure.Services
         {
             return await _context.Attendances
                 .AsNoTracking()
+                .Include(x => x.Student)
+                .Include(x => x.CourseClass)
                 .Where(x => x.StudentId == studentId)
                 .OrderByDescending(x => x.AttendanceDate)
                 .Select(x => new AttendanceDto
@@ -78,6 +80,7 @@ namespace ERP.Infrastructure.Services
                     StudentId = x.StudentId,
                     StudentName = x.Student.FullName,
                     CourseClassId = x.CourseClassId,
+                    ClassName = x.CourseClass.Name,
                     AttendanceDate = x.AttendanceDate,
                     Status = x.Status
                 })
@@ -88,6 +91,8 @@ namespace ERP.Infrastructure.Services
         {
             return await _context.Attendances
                 .AsNoTracking()
+                .Include(x => x.Student)
+                .Include(x => x.CourseClass)
                 .Where(x => x.CourseClassId == classId)
                 .OrderByDescending(x => x.AttendanceDate)
                 .Select(x => new AttendanceDto
@@ -96,10 +101,43 @@ namespace ERP.Infrastructure.Services
                     StudentId = x.StudentId,
                     StudentName = x.Student.FullName,
                     CourseClassId = x.CourseClassId,
+                    ClassName = x.CourseClass.Name,
                     AttendanceDate = x.AttendanceDate,
                     Status = x.Status
                 })
                 .ToListAsync();
+        }
+        public async Task<List<AttendanceDto>> GetAllAsync()
+        {
+            return await _context.Attendances
+                .AsNoTracking()
+                .Include(x => x.Student)
+                .Include(x => x.CourseClass)
+                .OrderByDescending(x => x.AttendanceDate)
+                .Select(x => new AttendanceDto
+                {
+                    Id = x.Id,
+                    StudentId = x.StudentId,
+                    StudentName = x.Student.FullName,
+                    CourseClassId = x.CourseClassId,
+                    ClassName = x.CourseClass.Name,
+                    AttendanceDate = x.AttendanceDate,
+                    Status = x.Status
+                })
+                .ToListAsync();
+        }
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var attendance = await _context.Attendances.FindAsync(id);
+
+            if (attendance == null)
+                return false;
+
+            _context.Attendances.Remove(attendance);
+
+            await _context.SaveChangesAsync();
+
+            return true;
         }
     }
 }

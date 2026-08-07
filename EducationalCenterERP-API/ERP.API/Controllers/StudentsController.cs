@@ -63,7 +63,7 @@ namespace ERP.API.Controllers
             if (!deleted)
                 return NotFound();
 
-            return NoContent();
+            return NoContent();        
         }
 
         [HttpGet("code/{code}")]
@@ -75,6 +75,28 @@ namespace ERP.API.Controllers
 
             return Ok(student);
 
+        }
+
+        [HttpGet("code/{code}/classes")]
+        public async Task<IActionResult> GetStudentClassesByCode(string code)
+        {
+            var result = await _service.GetStudentClassesByCodeAsync(code);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        [HttpGet("qr/{qr}/classes")]
+        public async Task<IActionResult> GetStudentClassesByQr(string qr)
+        {
+            var result = await _service.GetStudentClassesByQrAsync(qr);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
         }
     }
 }

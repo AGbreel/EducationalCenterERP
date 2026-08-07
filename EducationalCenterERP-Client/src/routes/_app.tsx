@@ -1,4 +1,10 @@
-import { Link, Outlet, createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   BookOpen,
@@ -9,21 +15,64 @@ import {
   ScanLine,
   UserRound,
   Users,
+  School,
+  ClipboardCheck,
+  UserPlus,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/data";
 import { cn } from "@/lib/utils";
-
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
 const nav = [
-  { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
-  { to: "/students", label: "الطلاب و QR", icon: Users },
-  { to: "/teachers", label: "المدرسون", icon: UserRound },
-  { to: "/subjects", label: "المواد", icon: BookOpen },
-  { to: "/scan", label: "سكان QR", icon: ScanLine },
+  {
+    to: "/dashboard",
+    label: "لوحة التحكم",
+    icon: LayoutDashboard,
+  },
+  {
+    to: "/students",
+    label: "الطلاب",
+    icon: Users,
+  },
+  {
+    to: "/teachers",
+    label: "المدرسون",
+    icon: UserRound,
+  },
+  {
+    to: "/subjects",
+    label: "المواد",
+    icon: BookOpen,
+  },
+  {
+    to: "/classes",
+    label: "الكلاسات",
+    icon: School,
+  },
+  {
+    to: "/student-enrollment",
+    label: "تسجيل الطلاب",
+    icon: UserPlus,
+  },
+  {
+    to: "/attendance",
+    label: "الحضور",
+    icon: ClipboardCheck,
+  },
+  {
+    to: "/payments",
+    label: "المدفوعات",
+    icon: CreditCard,
+  },
+  {
+    to: "/scan",
+    label: "QR Scanner",
+    icon: ScanLine,
+  },
 ] as const;
 
 function AppLayout() {
@@ -84,13 +133,21 @@ function AppLayout() {
       </aside>
 
       {open && (
-        <div className="fixed inset-0 z-30 bg-foreground/40 lg:hidden" onClick={() => setOpen(false)} />
+        <div
+          className="fixed inset-0 z-30 bg-foreground/40 lg:hidden"
+          onClick={() => setOpen(false)}
+        />
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-border bg-card px-5 py-3 lg:hidden">
           <span className="font-bold">منصّة السنتر</span>
-          <Button variant="ghost" size="icon" onClick={() => setOpen(true)} aria-label="القائمة">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpen(true)}
+            aria-label="القائمة"
+          >
             <Menu className="size-5" />
           </Button>
         </header>

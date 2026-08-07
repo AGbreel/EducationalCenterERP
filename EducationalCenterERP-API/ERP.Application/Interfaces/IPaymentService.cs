@@ -9,11 +9,22 @@ namespace ERP.Application.Interfaces
 {
     public interface IPaymentService
     {
+        // إنشاء عملية دفع
         Task<PaymentDto> CreateAsync(CreatePaymentDto dto);
-        Task<PaymentDto?> GetCurrentMonthPayment(Guid studentId);
-        Task<List<PaymentDto>> GetStudentPayments(Guid studentId);
-        Task<List<PaymentDto>> GetAllPayments();
-        Task<decimal> GetMonthlyIncome(int month, int year);
-        Task Delete(Guid id);
+
+        // جميع المدفوعات
+        Task<List<PaymentDto>> GetAllAsync();
+
+        // مدفوعات طالب
+        Task<List<PaymentDto>> GetStudentPaymentsAsync(Guid studentId);
+
+        // مدفوعات اشتراك معين
+        Task<List<PaymentDto>> GetStudentClassPaymentsAsync(Guid studentClassId);
+
+        // إجمالي الإيرادات
+        Task<decimal> GetIncomeAsync();
+
+        // حذف عملية دفع
+        Task<bool> DeleteAsync(Guid id);
     }
 }

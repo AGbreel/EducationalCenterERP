@@ -9,24 +9,31 @@ namespace ERP.Application.DTOs.Payments
 {
     public class CreatePaymentDto
     {
-        [Required]
+        // الطالب
         public Guid StudentId { get; set; }
 
-        [Range(1, 12)]
-        public int Month { get; set; }
+        // الاشتراك (StudentClass)
+        public Guid StudentClassId { get; set; }
 
-        [Range(2000, 2100)]
-        public int Year { get; set; }
-
-        [Range(0.01, 1000000)]
+        // قيمة الدفع
         public decimal Amount { get; set; }
 
-        [Required]
-        [StringLength(50)]
-        public string PaymentMethod { get; set; } = null!;
+        // الشهر والسنة
+        public int Month { get; set; }
 
-        [StringLength(300)]
+        public int Year { get; set; }
+
+        /// <summary>
+        /// Monthly
+        /// Session
+        /// </summary>
+        public string PaymentType { get; set; } = "Monthly";
+
+        // يستخدم فقط عند الدفع بالحصة
+        public int? SessionsCount { get; set; }
+
+        public string PaymentMethod { get; set; } = "Cash";
+
         public string? Notes { get; set; }
-        public Guid StudentClassId { get; set; }
     }
 }
