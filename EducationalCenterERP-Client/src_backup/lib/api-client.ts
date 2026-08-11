@@ -55,11 +55,9 @@ export async function request<T>(
       headers,
       body: body === undefined ? null : JSON.stringify(body),
     });
-  } catch (error) {
+  } catch {
     throw new ApiError(
-      `تعذّر الاتصال بالسيرفر: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      "تعذّر الاتصال بالسيرفر — تأكد أن الـ API يعمل وأن CORS مفعّل.",
       0,
     );
   }
