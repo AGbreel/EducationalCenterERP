@@ -79,8 +79,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:5173",
-                "http://localhost:8080",
-                "http://localhost:8081"
+                "https://educational-center-39gzgzu0q-ahmed-gbreels-projects.vercel.app"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -130,11 +129,11 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 //Swagger
- if (app.Environment.IsDevelopment())
- {
+if (app.Environment.IsDevelopment())
+{
     app.UseSwagger();
     app.UseSwaggerUI();
- }
+}
 
 using (var scope = app.Services.CreateScope())
 {
