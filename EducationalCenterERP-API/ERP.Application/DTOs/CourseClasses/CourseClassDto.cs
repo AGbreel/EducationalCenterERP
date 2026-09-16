@@ -1,13 +1,13 @@
-﻿namespace ERP.Application.DTOs.CourseClasses;
-
-public class CourseClassDto
+﻿public class CourseClassDto
 {
     public Guid Id { get; set; }
 
     public string Name { get; set; } = null!;
 
+    public Guid SubjectId { get; set; }
     public string Subject { get; set; } = null!;
 
+    public Guid TeacherId { get; set; }
     public string Teacher { get; set; } = null!;
 
     public string Day { get; set; } = null!;

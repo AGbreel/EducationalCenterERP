@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   BookOpen,
   CalendarCheck,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   GraduationCap,
   ScanLine,
@@ -29,8 +32,62 @@ export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
 });
 
+const PAGE_SIZE = 5;
+
+function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="mt-5 flex items-center justify-center gap-1">
+      <Button
+        variant="outline"
+        size="icon"
+        disabled={currentPage === 1}
+        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+      >
+        <ChevronRight className="size-4" />
+      </Button>
+
+      {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+        (page) => (
+          <Button
+            key={page}
+            variant={page === currentPage ? "default" : "outline"}
+            size="icon"
+            onClick={() => onPageChange(page)}
+          >
+            {page}
+          </Button>
+        ),
+      )}
+
+      <Button
+        variant="outline"
+        size="icon"
+        disabled={currentPage === totalPages}
+        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+      >
+        <ChevronLeft className="size-4" />
+      </Button>
+    </div>
+  );
+}
+
 function DashboardPage() {
   const db = useDb();
+
+  const [occupancyPage, setOccupancyPage] = useState(1);
+  const [classesPage, setClassesPage] = useState(1);
+  const [attendancePage, setAttendancePage] = useState(1);
+  const [paymentsPage, setPaymentsPage] = useState(1);
 
   const today = new Date().toDateString();
 
@@ -54,7 +111,7 @@ function DashboardPage() {
       icon: UserRound,
     },
     {
-      title: "الكلاسات",
+      title: "المجموعات",
       value: db.courseClasses.length,
       icon: GraduationCap,
     },
@@ -75,6 +132,57 @@ function DashboardPage() {
     },
   ];
 
+  // -----------------------------
+  // Pagination - المجموعات
+  // -----------------------------
+
+  const occupancyTotalPages = Math.ceil(db.courseClasses.length / PAGE_SIZE);
+
+  const paginatedOccupancyClasses = db.courseClasses.slice(
+    (occupancyPage - 1) * PAGE_SIZE,
+    occupancyPage * PAGE_SIZE,
+  );
+
+  const classesTotalPages = Math.ceil(db.courseClasses.length / PAGE_SIZE);
+
+  const paginatedClasses = db.courseClasses.slice(
+    (classesPage - 1) * PAGE_SIZE,
+    classesPage * PAGE_SIZE,
+  );
+
+  // -----------------------------
+  // Pagination - الحضور
+  // -----------------------------
+
+  const sortedAttendance = [...db.attendance].sort(
+    (a, b) =>
+      new Date(b.attendanceDate).getTime() -
+      new Date(a.attendanceDate).getTime(),
+  );
+
+  const attendanceTotalPages = Math.ceil(sortedAttendance.length / PAGE_SIZE);
+
+  const paginatedAttendance = sortedAttendance.slice(
+    (attendancePage - 1) * PAGE_SIZE,
+    attendancePage * PAGE_SIZE,
+  );
+
+  // -----------------------------
+  // Pagination - المدفوعات
+  // -----------------------------
+
+  const sortedPayments = [...db.payments].sort(
+    (a, b) =>
+      new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime(),
+  );
+
+  const paymentsTotalPages = Math.ceil(sortedPayments.length / PAGE_SIZE);
+
+  const paginatedPayments = sortedPayments.slice(
+    (paymentsPage - 1) * PAGE_SIZE,
+    paymentsPage * PAGE_SIZE,
+  );
+
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -82,7 +190,7 @@ function DashboardPage() {
           <h1 className="text-3xl font-bold">لوحة التحكم</h1>
 
           <p className="mt-1 text-sm text-muted-foreground">
-            متابعة الطلاب والحضور والإيرادات والكلاسات.
+            متابعة الطلاب والحضور والإيرادات والمجموعات.
           </p>
         </div>
 
@@ -94,6 +202,7 @@ function DashboardPage() {
         </Button>
       </header>
 
+      {/* الإحصائيات */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {stats.map((item) => {
           const Icon = item.icon;
@@ -116,29 +225,31 @@ function DashboardPage() {
           );
         })}
       </section>
+
+      {/* المجموعات */}
       <section className="grid gap-6 lg:grid-cols-2">
-        {/* إحصائيات الكلاسات */}
+        {/* إحصائيات المجموعات */}
         <div className="surface-card p-6">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold">نسبة إشغال الكلاسات</h2>
+              <h2 className="text-xl font-bold">نسبة إشغال المجموعات</h2>
 
               <p className="text-sm text-muted-foreground">
                 عدد الطلاب الحالي مقارنة بالحد الأقصى.
               </p>
             </div>
 
-            <Badge variant="secondary">{db.courseClasses.length} كلاس</Badge>
+            <Badge variant="secondary">{db.courseClasses.length} مجموعة</Badge>
           </div>
 
           <div className="space-y-5">
             {db.courseClasses.length === 0 && (
               <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-                لا توجد كلاسات حتى الآن.
+                لا توجد مجموعات حتى الآن.
               </div>
             )}
 
-            {db.courseClasses.map((course) => {
+            {paginatedOccupancyClasses.map((course) => {
               const percent =
                 course.maxStudents === 0
                   ? 0
@@ -183,13 +294,19 @@ function DashboardPage() {
               );
             })}
           </div>
+
+          <Pagination
+            currentPage={occupancyPage}
+            totalPages={occupancyTotalPages}
+            onPageChange={setOccupancyPage}
+          />
         </div>
 
-        {/* آخر الكلاسات */}
+        {/* المجموعات الحالية */}
         <div className="surface-card p-6">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold">الكلاسات الحالية</h2>
+              <h2 className="text-xl font-bold">المجموعات الحالية</h2>
 
               <p className="text-sm text-muted-foreground">
                 نظرة سريعة على الجدول.
@@ -202,11 +319,11 @@ function DashboardPage() {
           <div className="space-y-4">
             {db.courseClasses.length === 0 && (
               <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-                لا توجد كلاسات.
+                لا توجد مجموعات.
               </div>
             )}
 
-            {db.courseClasses.map((course) => (
+            {paginatedClasses.map((course) => (
               <div
                 key={course.id}
                 className="flex items-center justify-between rounded-xl border p-4 transition hover:bg-muted/40"
@@ -233,8 +350,16 @@ function DashboardPage() {
               </div>
             ))}
           </div>
+
+          <Pagination
+            currentPage={classesPage}
+            totalPages={classesTotalPages}
+            onPageChange={setClassesPage}
+          />
         </div>
       </section>
+
+      {/* الحضور والمدفوعات */}
       <section className="grid gap-6 xl:grid-cols-2">
         {/* آخر عمليات الحضور */}
         <div className="surface-card p-6">
@@ -257,7 +382,7 @@ function DashboardPage() {
               </div>
             )}
 
-            {db.attendance.slice(0, 8).map((attendance) => (
+            {paginatedAttendance.map((attendance) => (
               <div
                 key={attendance.id}
                 className="flex items-center justify-between rounded-xl border p-4 transition hover:bg-muted/40"
@@ -280,6 +405,12 @@ function DashboardPage() {
               </div>
             ))}
           </div>
+
+          <Pagination
+            currentPage={attendancePage}
+            totalPages={attendanceTotalPages}
+            onPageChange={setAttendancePage}
+          />
         </div>
 
         {/* آخر المدفوعات */}
@@ -303,7 +434,7 @@ function DashboardPage() {
               </div>
             )}
 
-            {db.payments.slice(0, 8).map((payment) => {
+            {paginatedPayments.map((payment) => {
               const student = db.students.find(
                 (x) => x.id === payment.studentId,
               );
@@ -323,7 +454,7 @@ function DashboardPage() {
                     </p>
 
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {new Date(payment.date).toLocaleString("ar-EG")}
+                      {new Date(payment.paymentDate).toLocaleString("ar-EG")}
                     </p>
                   </div>
 
@@ -332,8 +463,16 @@ function DashboardPage() {
               );
             })}
           </div>
+
+          <Pagination
+            currentPage={paymentsPage}
+            totalPages={paymentsTotalPages}
+            onPageChange={setPaymentsPage}
+          />
         </div>
       </section>
+
+      {/* الإجراءات السريعة وملخص النظام */}
       <section className="grid gap-6 lg:grid-cols-2">
         {/* إجراءات سريعة */}
         <div className="surface-card p-6">
@@ -357,7 +496,7 @@ function DashboardPage() {
             <Button asChild variant="outline" className="h-24 flex-col gap-2">
               <Link to="/classes">
                 <GraduationCap className="size-7" />
-                إنشاء كلاس
+                إنشاء مجموعة
               </Link>
             </Button>
 

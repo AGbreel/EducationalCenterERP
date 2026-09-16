@@ -242,12 +242,12 @@ function ScanPage() {
 
                 <TabsContent value="attendance" className="space-y-4 pt-4">
                   <p className="text-sm text-muted-foreground">
-                    اختر الكلاس لتسجيل الحضور.
+                    اختر المجموعة لتسجيل الحضور.
                   </p>
 
                   {studentEnrollments.length === 0 && (
                     <p className="text-sm text-muted-foreground">
-                      الطالب غير مشترك في أي كلاس.
+                      الطالب غير مشترك في أي مجموعة.
                     </p>
                   )}
 
@@ -298,12 +298,12 @@ function ScanPage() {
 
                 <TabsContent value="payment" className="space-y-4 pt-4">
                   <p className="text-sm text-muted-foreground">
-                    اختر الكلاس لتسجيل دفعة جديدة.
+                    اختر المجموعة لتسجيل دفعة جديدة.
                   </p>
 
                   {studentEnrollments.length === 0 && (
                     <p className="text-sm text-muted-foreground">
-                      الطالب غير مشترك في أي كلاس.
+                      الطالب غير مشترك في أي مجموعة.
                     </p>
                   )}
 
@@ -364,9 +364,9 @@ function ScanPage() {
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* الكلاس */}
+            {/* المجموعة */}
             <div>
-              <Label>الكلاس</Label>
+              <Label>المجموعة</Label>
 
               <Input
                 value={selectedEnrollment?.courseClass?.name ?? ""}

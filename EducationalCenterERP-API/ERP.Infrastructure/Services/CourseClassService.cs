@@ -28,7 +28,9 @@ public class CourseClassService : ICourseClassService
             {
                 Id = x.Id,
                 Name = x.Name,
+                SubjectId = x.SubjectId,
                 Subject = x.Subject.Name,
+                TeacherId = x.TeacherId,
                 Teacher = x.Teacher.FullName,
                 Day = x.Day,
                 StartTime = x.StartTime,
@@ -51,8 +53,10 @@ public class CourseClassService : ICourseClassService
             .Select(x => new CourseClassDto
             {
                 Id = x.Id,
-                Name = x.Name,
+                Name = x.Name,       
+                SubjectId = x.SubjectId,
                 Subject = x.Subject.Name,
+                TeacherId = x.TeacherId,
                 Teacher = x.Teacher.FullName,
                 Day = x.Day,
                 StartTime = x.StartTime,

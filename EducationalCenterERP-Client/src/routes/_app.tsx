@@ -50,7 +50,7 @@ const nav = [
   },
   {
     to: "/classes",
-    label: "الكلاسات",
+    label: "المجموعات",
     icon: School,
   },
   {
@@ -73,6 +73,11 @@ const nav = [
     label: "QR Scanner",
     icon: ScanLine,
   },
+  {
+    to: "/expenses",
+    label: "المصروفات",
+    icon: CreditCard,
+  },
 ] as const;
 
 function AppLayout() {
@@ -87,10 +92,10 @@ function AppLayout() {
   useEffect(() => setOpen(false), [pathname]);
 
   return (
-    <div className="min-h-screen bg-background lg:flex">
+    <div className="min-h-screen bg-background lg:flex lg:h-screen lg:overflow-hidden">
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 z-40 w-72 shrink-0 bg-sidebar p-5 text-sidebar-foreground transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 right-0 z-40 w-72 shrink-0 overflow-y-auto bg-sidebar p-5 text-sidebar-foreground transition-transform lg:static lg:h-screen lg:translate-x-0",
           open ? "translate-x-0" : "translate-x-full lg:translate-x-0",
         )}
       >
@@ -139,7 +144,7 @@ function AppLayout() {
         />
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col lg:overflow-hidden">
         <header className="flex items-center justify-between border-b border-border bg-card px-5 py-3 lg:hidden">
           <span className="font-bold">منصّة السنتر</span>
           <Button
@@ -151,7 +156,7 @@ function AppLayout() {
             <Menu className="size-5" />
           </Button>
         </header>
-        <main className="flex-1 p-5 lg:p-8">
+        <main className="flex-1 p-5 lg:overflow-y-auto lg:p-8">
           <Outlet />
         </main>
       </div>

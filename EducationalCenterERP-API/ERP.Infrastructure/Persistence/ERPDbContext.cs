@@ -20,6 +20,7 @@ public class ERPDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<StudentClass> StudentClasses { get; set; }
     public DbSet<Attendance> Attendances { get; set; }
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<Expense> Expenses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -62,6 +63,9 @@ public class ERPDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             .Property(x => x.Salary)
             .HasPrecision(18, 2);
 
+        builder.Entity<Expense>()
+            .Property(e => e.Amount)
+            .HasPrecision(18, 2);
         // =========================
         // Relationships
         // =========================
@@ -77,5 +81,6 @@ public class ERPDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
             .WithMany(x => x.Payments)
             .HasForeignKey(x => x.StudentClassId)
             .OnDelete(DeleteBehavior.Cascade);
+
     }
 }

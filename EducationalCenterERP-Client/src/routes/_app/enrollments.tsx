@@ -23,11 +23,11 @@ export const Route = createFileRoute("/_app/enrollments")({
   head: () => ({
     meta: [
       {
-        title: "تسجيل الطلاب داخل الكلاسات | منصة السنتر",
+        title: "تسجيل الطلاب داخل المجموعات | منصة السنتر",
       },
       {
         name: "description",
-        content: "تسجيل الطلاب داخل الكلاسات وإدارة الاشتراكات الشهرية.",
+        content: "تسجيل الطلاب داخل المجموعات وإدارة الاشتراكات الشهرية.",
       },
       {
         property: "og:title",
@@ -63,7 +63,7 @@ function EnrollmentsPage() {
     }
 
     if (!form.classId) {
-      toast.error("اختر الكلاس");
+      toast.error("اختر المجموعة");
       return;
     }
 
@@ -75,9 +75,13 @@ function EnrollmentsPage() {
     setSaving(true);
 
     try {
-      await api.enrollStudent(form.studentId, form.classId, Number(form.monthlyFee));
+      await api.enrollStudent(
+        form.studentId,
+        form.classId,
+        Number(form.monthlyFee),
+      );
 
-      toast.success("تم تسجيل الطالب داخل الكلاس");
+      toast.success("تم تسجيل الطالب داخل المجموعة");
 
       setForm({
         studentId: "",
@@ -94,10 +98,10 @@ function EnrollmentsPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-3xl font-bold">تسجيل الطلاب داخل الكلاسات</h1>
+        <h1 className="text-3xl font-bold">تسجيل الطلاب داخل المجموعات</h1>
 
         <p className="mt-1 text-sm text-muted-foreground">
-          اختر الطالب ثم اختر الكلاس وحدد قيمة الاشتراك الشهري.
+          اختر الطالب ثم اختر المجموعة وحدد قيمة الاشتراك الشهري.
         </p>
       </header>
 
@@ -132,7 +136,7 @@ function EnrollmentsPage() {
         </div>
 
         <div className="space-y-2">
-          <Label>الكلاس</Label>
+          <Label>المجموعة</Label>
 
           <Select
             value={form.classId}
@@ -144,7 +148,7 @@ function EnrollmentsPage() {
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="اختر الكلاس" />
+              <SelectValue placeholder="اختر المجموعة" />
             </SelectTrigger>
 
             <SelectContent>
@@ -200,13 +204,13 @@ function EnrollmentsPage() {
 
                 <Badge>
                   <Users className="mr-1 size-4" />
-                  {enrollments.length} كلاس
+                  {enrollments.length} مجموعة
                 </Badge>
               </div>
 
               {enrollments.length === 0 ? (
                 <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                  الطالب غير مسجل في أي كلاس.
+                  الطالب غير مسجل في أي مجموعة.
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -251,7 +255,7 @@ function EnrollmentsPage() {
                             api
                               .unenroll(enrollment.id)
                               .then(() =>
-                                toast.success("تم حذف الطالب من الكلاس"),
+                                toast.success("تم حذف الطالب من المجموعة"),
                               )
                               .catch((err: Error) => toast.error(err.message));
                           }}

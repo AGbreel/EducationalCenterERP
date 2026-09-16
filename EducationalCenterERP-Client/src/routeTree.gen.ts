@@ -15,6 +15,7 @@ import { Route as AppAttendanceRouteImport } from './routes/_app/attendance'
 import { Route as AppClassesRouteImport } from './routes/_app/classes'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppEnrollmentsRouteImport } from './routes/_app/enrollments'
+import { Route as AppExpensesRouteImport } from './routes/_app/expenses'
 import { Route as AppPaymentsRouteImport } from './routes/_app/payments'
 import { Route as AppScanRouteImport } from './routes/_app/scan'
 import { Route as AppStudentEnrollmentRouteImport } from './routes/_app/student-enrollment'
@@ -49,6 +50,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppEnrollmentsRoute = AppEnrollmentsRouteImport.update({
   id: '/enrollments',
   path: '/enrollments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppExpensesRoute = AppExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPaymentsRoute = AppPaymentsRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/classes': typeof AppClassesRoute
   '/dashboard': typeof AppDashboardRoute
   '/enrollments': typeof AppEnrollmentsRoute
+  '/expenses': typeof AppExpensesRoute
   '/payments': typeof AppPaymentsRoute
   '/scan': typeof AppScanRoute
   '/student-enrollment': typeof AppStudentEnrollmentRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/classes': typeof AppClassesRoute
   '/dashboard': typeof AppDashboardRoute
   '/enrollments': typeof AppEnrollmentsRoute
+  '/expenses': typeof AppExpensesRoute
   '/payments': typeof AppPaymentsRoute
   '/scan': typeof AppScanRoute
   '/student-enrollment': typeof AppStudentEnrollmentRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/_app/classes': typeof AppClassesRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/enrollments': typeof AppEnrollmentsRoute
+  '/_app/expenses': typeof AppExpensesRoute
   '/_app/payments': typeof AppPaymentsRoute
   '/_app/scan': typeof AppScanRoute
   '/_app/student-enrollment': typeof AppStudentEnrollmentRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/classes'
     | '/dashboard'
     | '/enrollments'
+    | '/expenses'
     | '/payments'
     | '/scan'
     | '/student-enrollment'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/classes'
     | '/dashboard'
     | '/enrollments'
+    | '/expenses'
     | '/payments'
     | '/scan'
     | '/student-enrollment'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/_app/classes'
     | '/_app/dashboard'
     | '/_app/enrollments'
+    | '/_app/expenses'
     | '/_app/payments'
     | '/_app/scan'
     | '/_app/student-enrollment'
@@ -215,6 +227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEnrollmentsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/expenses': {
+      id: '/_app/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof AppExpensesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/payments': {
       id: '/_app/payments'
       path: '/payments'
@@ -265,6 +284,7 @@ interface AppRouteChildren {
   AppClassesRoute: typeof AppClassesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEnrollmentsRoute: typeof AppEnrollmentsRoute
+  AppExpensesRoute: typeof AppExpensesRoute
   AppPaymentsRoute: typeof AppPaymentsRoute
   AppScanRoute: typeof AppScanRoute
   AppStudentEnrollmentRoute: typeof AppStudentEnrollmentRoute
@@ -278,6 +298,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppClassesRoute: AppClassesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEnrollmentsRoute: AppEnrollmentsRoute,
+  AppExpensesRoute: AppExpensesRoute,
   AppPaymentsRoute: AppPaymentsRoute,
   AppScanRoute: AppScanRoute,
   AppStudentEnrollmentRoute: AppStudentEnrollmentRoute,

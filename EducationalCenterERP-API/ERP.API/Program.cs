@@ -33,6 +33,7 @@ builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<ICourseClassService, CourseClassService>();
 builder.Services.AddScoped<IStudentClassService, StudentClassService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];

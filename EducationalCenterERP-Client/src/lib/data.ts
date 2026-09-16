@@ -49,6 +49,26 @@ export type Payment = {
   notes: string;
   paymentDate: string;
 };
+export type Expense = {
+  id: string;
+  payerName: string;
+  reason: string;
+  category?: string | null;
+  amount: number;
+  paymentDate: string;
+  eventDate?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+};
+export type CreateExpenseDto = {
+  payerName: string;
+  reason: string;
+  category?: string | null;
+  amount: number;
+  paymentDate: string;
+  eventDate?: string | null;
+  notes?: string | null;
+};
 export type courseClasses = {
   id: string;
   name: string;
@@ -242,6 +262,21 @@ function toCourseClass(raw: unknown): courseClasses {
 
     maxStudents: num(field(raw, "maxStudents")),
     currentStudents: num(field(raw, "currentStudents")),
+  };
+}
+function toExpense(raw: unknown): Expense {
+  return {
+    id: str(field(raw, "id")),
+    payerName: str(field(raw, "payerName")),
+    reason: str(field(raw, "reason")),
+    category:
+      field(raw, "category") == null ? null : str(field(raw, "category")),
+    amount: num(field(raw, "amount")),
+    paymentDate: str(field(raw, "paymentDate")),
+    eventDate:
+      field(raw, "eventDate") == null ? null : str(field(raw, "eventDate")),
+    notes: field(raw, "notes") == null ? null : str(field(raw, "notes")),
+    createdAt: str(field(raw, "createdAt")),
   };
 }
 
@@ -555,6 +590,13 @@ export const api = {
 
     changed();
   },
+  async getClassById(id: string): Promise<courseClasses> {
+    const result = await request<unknown>(`/classes/${id}`, {
+      method: "GET",
+    });
+
+    return toCourseClass(result);
+  },
   async removeClass(id: string) {
     await request(`/classes/${id}`, {
       method: "DELETE",
@@ -576,6 +618,34 @@ export const api = {
   },
   async getStudentClassPayments(studentClassId: string) {
     return list(`/payments/student-class/${studentClassId}`, toPayment);
+  },
+  async getExpenses(): Promise<Expense[]> {
+    return list("/expenses", toExpense);
+  },
+
+  async addExpense(dto: CreateExpenseDto): Promise<Expense> {
+    const created = await request<unknown>("/expenses", {
+      method: "POST",
+      body: dto,
+    });
+
+    changed();
+
+    return toExpense(created ?? {});
+  },
+
+  async removeExpense(id: string) {
+    await request(`/expenses/${id}`, {
+      method: "DELETE",
+    });
+
+    changed();
+  },
+
+  async getExpensesTotal(): Promise<number> {
+    const result = await request<unknown>("/expenses/total");
+
+    return num(field(result, "totalExpenses"));
   },
 };
 
