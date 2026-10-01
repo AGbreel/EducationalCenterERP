@@ -82,8 +82,10 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:5173",
+                "https://educational-center-erp.vercel.app",
                 "https://educational-center-39gzgzu0q-ahmed-gbreels-projects.vercel.app",
-                "https://educational-center-lexnfmild-ahmed-gbreels-projects.vercel.app"
+                "https://educational-center-lexnfmild-ahmed-gbreels-projects.vercel.app",
+                "https://educational-center-dgsmgzej8-ahmed-gbreels-projects.vercel.app"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
