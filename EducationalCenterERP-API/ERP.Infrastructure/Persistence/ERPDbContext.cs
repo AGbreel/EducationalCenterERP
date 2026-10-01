@@ -21,6 +21,7 @@ public class ERPDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<Attendance> Attendances { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Expense> Expenses { get; set; }
+    public DbSet<OtherPayment> OtherPayments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

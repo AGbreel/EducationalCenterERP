@@ -1,3 +1,4 @@
+import { api, type OtherIncome } from "@/lib/data";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
@@ -55,45 +56,30 @@ import {
 } from "@/components/ui/dialog";
 
 import { toast } from "sonner";
-import { api } from "@/lib/data";
 
-export const Route = createFileRoute("/_app/expenses")({
+export const Route = createFileRoute("/_app/OtherIncomes")({
   head: () => ({
     meta: [
       {
-        title: "المصروفات  | منصة السنتر",
+        title: "الإيرادات الأخرى | منصة السنتر",
       },
       {
         name: "description",
-        content: "تسجيل وإدارة المصروفات  داخل السنتر.",
+        content: "تسجيل وإدارة الإيرادات الأخرى داخل السنتر.",
       },
     ],
   }),
-  component: ExpensesPage,
+  component: OtherIncomes,
 });
 
-type Expense = {
-  id: string;
-  payerName: string;
-  reason: string;
-  category?: string | null;
-  amount: number;
-  paymentDate: string;
-  eventDate?: string | null;
-  notes?: string | null;
-  createdAt?: string;
-};
-
-const expenseCategories = [
-  "رواتب",
-  "إيجار",
-  "كهرباء",
-  "مياه",
-  "إنترنت",
-  "أدوات",
-  "دعاية",
-  "مواصلات",
-  "صيانة",
+const incomeCategories = [
+  "استضافة",
+  "تبرع",
+  "إيجار قاعة",
+  "بيع ملازم",
+  "كورس إضافي",
+  "خدمات",
+  "شراكة",
   "أخرى",
 ];
 
@@ -146,8 +132,8 @@ function Pagination({
   );
 }
 
-function ExpensesPage() {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+function OtherIncomes() {
+  const [incomes, setIncomes] = useState<OtherIncome[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [open, setOpen] = useState(false);
@@ -164,7 +150,7 @@ function ExpensesPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [expenseForm, setExpenseForm] = useState({
+  const [incomeForm, setIncomeForm] = useState({
     payerName: "",
     reason: "",
     category: "أخرى",
@@ -190,16 +176,14 @@ function ExpensesPage() {
   ];
 
   // =========================
-  // Load Expenses
+  // Load incomes
   // =========================
 
-  const loadExpenses = async () => {
+  const loadOtherIncomes = async () => {
     try {
       setLoading(true);
-
-      const result = await api.getExpenses();
-
-      setExpenses(result);
+      const result = await api.getOtherIncomes();
+      setIncomes(result);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "حدث خطأ أثناء تحميل المصروفات",
@@ -210,18 +194,18 @@ function ExpensesPage() {
   };
 
   useEffect(() => {
-    loadExpenses();
+    loadOtherIncomes();
   }, []);
 
   // =========================
   // Helpers
   // =========================
 
-  const getExpenseMonth = (date: string) => {
+  const getincomeMonth = (date: string) => {
     return new Date(date).getMonth() + 1;
   };
 
-  const getExpenseYear = (date: string) => {
+  const getincomeYear = (date: string) => {
     return new Date(date).getFullYear();
   };
 
@@ -230,47 +214,47 @@ function ExpensesPage() {
   // =========================
 
   const payers = useMemo(() => {
-    const names = expenses.map((expense) => expense.payerName).filter(Boolean);
+    const names = incomes.map((income) => income.payerName).filter(Boolean);
 
     return Array.from(new Set(names));
-  }, [expenses]);
+  }, [incomes]);
 
   // =========================
-  // Filtered Expenses
+  // Filtered incomes
   // =========================
 
-  const filteredExpenses = useMemo(() => {
-    return [...expenses]
+  const filteredincomes = useMemo(() => {
+    return [...incomes]
       .sort(
         (a, b) =>
           new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime(),
       )
-      .filter((expense) => {
-        if (categoryFilter !== "all" && expense.category !== categoryFilter) {
+      .filter((income) => {
+        if (categoryFilter !== "all" && income.category !== categoryFilter) {
           return false;
         }
 
-        if (payerFilter !== "all" && expense.payerName !== payerFilter) {
+        if (payerFilter !== "all" && income.payerName !== payerFilter) {
           return false;
         }
 
         if (
           monthFilter !== "all" &&
-          getExpenseMonth(expense.paymentDate).toString() !== monthFilter
+          getincomeMonth(income.paymentDate).toString() !== monthFilter
         ) {
           return false;
         }
 
         if (
           yearFilter !== "all" &&
-          getExpenseYear(expense.paymentDate).toString() !== yearFilter
+          getincomeYear(income.paymentDate).toString() !== yearFilter
         ) {
           return false;
         }
 
         return true;
       });
-  }, [expenses, categoryFilter, payerFilter, monthFilter, yearFilter]);
+  }, [incomes, categoryFilter, payerFilter, monthFilter, yearFilter]);
 
   // =========================
   // Reset Pagination
@@ -284,9 +268,9 @@ function ExpensesPage() {
   // Pagination
   // =========================
 
-  const totalPages = Math.ceil(filteredExpenses.length / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredincomes.length / PAGE_SIZE);
 
-  const paginatedExpenses = filteredExpenses.slice(
+  const paginatedincomes = filteredincomes.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE,
   );
@@ -295,30 +279,30 @@ function ExpensesPage() {
   // Statistics
   // =========================
 
-  const totalExpenses = useMemo(() => {
-    return expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  }, [expenses]);
+  const totalincomes = useMemo(() => {
+    return incomes.reduce((sum, income) => sum + income.amount, 0);
+  }, [incomes]);
 
-  const monthExpenses = useMemo(() => {
-    return expenses
+  const monthincomes = useMemo(() => {
+    return incomes
       .filter(
-        (expense) =>
-          getExpenseMonth(expense.paymentDate) === currentMonth &&
-          getExpenseYear(expense.paymentDate) === currentYear,
+        (income) =>
+          getincomeMonth(income.paymentDate) === currentMonth &&
+          getincomeYear(income.paymentDate) === currentYear,
       )
-      .reduce((sum, expense) => sum + expense.amount, 0);
-  }, [expenses, currentMonth, currentYear]);
+      .reduce((sum, income) => sum + income.amount, 0);
+  }, [incomes, currentMonth, currentYear]);
 
   const filteredTotal = useMemo(() => {
-    return filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  }, [filteredExpenses]);
+    return filteredincomes.reduce((sum, income) => sum + income.amount, 0);
+  }, [filteredincomes]);
 
   // =========================
   // Reset Form
   // =========================
 
   const resetForm = () => {
-    setExpenseForm({
+    setIncomeForm({
       payerName: "",
       reason: "",
       category: "أخرى",
@@ -330,39 +314,38 @@ function ExpensesPage() {
   };
 
   // =========================
-  // Create Expense
+  // Create income
   // =========================
-
-  const handleCreateExpense = async () => {
+  const handleCreateincome = async () => {
     try {
-      if (!expenseForm.payerName.trim()) {
+      if (!incomeForm.payerName.trim()) {
         toast.error("اكتب اسم الشخص الذي دفع");
         return;
       }
 
-      if (!expenseForm.reason.trim()) {
+      if (!incomeForm.reason.trim()) {
         toast.error("اكتب سبب الدفع");
         return;
       }
 
-      if (!expenseForm.amount || Number(expenseForm.amount) <= 0) {
+      if (!incomeForm.amount || Number(incomeForm.amount) <= 0) {
         toast.error("أدخل مبلغ صحيح");
         return;
       }
 
-      if (!expenseForm.paymentDate) {
+      if (!incomeForm.paymentDate) {
         toast.error("حدد تاريخ الدفع");
         return;
       }
 
-      await api.addExpense({
-        payerName: expenseForm.payerName.trim(),
-        reason: expenseForm.reason.trim(),
-        category: expenseForm.category,
-        amount: Number(expenseForm.amount),
-        paymentDate: expenseForm.paymentDate,
-        eventDate: expenseForm.eventDate || null,
-        notes: expenseForm.notes.trim() || null,
+      await api.addOtherIncome({
+        payerName: incomeForm.payerName.trim(),
+        reason: incomeForm.reason.trim(),
+        category: incomeForm.category,
+        amount: Number(incomeForm.amount),
+        paymentDate: incomeForm.paymentDate,
+        eventDate: incomeForm.eventDate || null,
+        notes: incomeForm.notes.trim() || null,
       });
 
       toast.success("تم تسجيل المصروف بنجاح");
@@ -370,7 +353,7 @@ function ExpensesPage() {
       setOpen(false);
       resetForm();
 
-      await loadExpenses();
+      await loadOtherIncomes();
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "حدث خطأ أثناء تسجيل المصروف",
@@ -379,16 +362,15 @@ function ExpensesPage() {
   };
 
   // =========================
-  // Delete Expense
+  // Delete income
   // =========================
-
   const handleDelete = async (id: string) => {
     try {
-      await api.removeExpense(id);
+      await api.removeOtherIncome(id);
 
       toast.success("تم حذف المصروف");
 
-      await loadExpenses();
+      await loadOtherIncomes();
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "حدث خطأ أثناء حذف المصروف",
@@ -399,7 +381,6 @@ function ExpensesPage() {
   // =========================
   // Format Date
   // =========================
-
   const formatDate = (date?: string | null) => {
     if (!date) return "-";
 
@@ -412,10 +393,10 @@ function ExpensesPage() {
 
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">المصروفات </h1>
+          <h1 className="text-3xl font-bold">الإيرادات الأخرى</h1>
 
           <p className="mt-1 text-sm text-muted-foreground">
-            تسجيل ومتابعة جميع المصروفات داخل السنتر.
+            تسجيل ومتابعة جميع المصروفات والدفعات الأخرى داخل السنتر.
           </p>
         </div>
 
@@ -427,7 +408,7 @@ function ExpensesPage() {
           }}
         >
           <Plus className="size-4" />
-          تسجيل مصروف
+          تسجيل إيراد
         </Button>
       </header>
 
@@ -437,10 +418,12 @@ function ExpensesPage() {
         <div className="surface-card p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">إجمالي المصروفات</p>
+              <p className="text-sm text-muted-foreground">
+                إجمالي الإيرادات الأخرى
+              </p>
 
               <p className="mt-2 text-3xl font-bold">
-                {totalExpenses.toLocaleString("ar-EG")} ج.م
+                {totalincomes.toLocaleString("ar-EG")} ج.م
               </p>
             </div>
 
@@ -451,10 +434,10 @@ function ExpensesPage() {
         <div className="surface-card p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">مصروفات هذا الشهر</p>
+              <p className="text-sm text-muted-foreground">إيرادات هذا الشهر</p>
 
               <p className="mt-2 text-3xl font-bold">
-                {monthExpenses.toLocaleString("ar-EG")} ج.م
+                {monthincomes.toLocaleString("ar-EG")} ج.م
               </p>
             </div>
 
@@ -469,7 +452,7 @@ function ExpensesPage() {
                 عدد عمليات المصروفات
               </p>
 
-              <p className="mt-2 text-3xl font-bold">{expenses.length}</p>
+              <p className="mt-2 text-3xl font-bold">{incomes.length}</p>
             </div>
 
             <Receipt className="size-9 text-primary" />
@@ -478,7 +461,6 @@ function ExpensesPage() {
       </div>
 
       {/* Filters */}
-
       <div className="surface-card p-5">
         <div className="mb-5">
           <h2 className="text-lg font-bold">البحث والفلترة</h2>
@@ -490,10 +472,8 @@ function ExpensesPage() {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {/* Payer */}
-
           <div className="space-y-2">
-            <Label>من دفع؟</Label>
-
+            <Label>مصدر الإيراد</Label>
             <Select value={payerFilter} onValueChange={setPayerFilter}>
               <SelectTrigger>
                 <SelectValue />
@@ -512,7 +492,6 @@ function ExpensesPage() {
           </div>
 
           {/* Category */}
-
           <div className="space-y-2">
             <Label>التصنيف</Label>
 
@@ -524,7 +503,7 @@ function ExpensesPage() {
               <SelectContent>
                 <SelectItem value="all">جميع التصنيفات</SelectItem>
 
-                {expenseCategories.map((category) => (
+                {incomeCategories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
                   </SelectItem>
@@ -534,6 +513,7 @@ function ExpensesPage() {
           </div>
 
           {/* Month */}
+
           <div className="space-y-2">
             <Label>الشهر</Label>
 
@@ -544,7 +524,6 @@ function ExpensesPage() {
 
               <SelectContent>
                 <SelectItem value="all">كل الشهور</SelectItem>
-
                 {months.map((month, index) => (
                   <SelectItem key={index} value={(index + 1).toString()}>
                     {month}
@@ -568,8 +547,8 @@ function ExpensesPage() {
 
                 {Array.from(
                   new Set(
-                    expenses.map((expense) =>
-                      getExpenseYear(expense.paymentDate).toString(),
+                    incomes.map((income) =>
+                      getincomeYear(income.paymentDate).toString(),
                     ),
                   ),
                 )
@@ -586,6 +565,7 @@ function ExpensesPage() {
       </div>
 
       {/* Filtered Summary */}
+
       <div className="grid gap-4 md:grid-cols-2">
         <div className="surface-card p-5">
           <p className="text-sm text-muted-foreground">
@@ -600,11 +580,12 @@ function ExpensesPage() {
         <div className="surface-card p-5">
           <p className="text-sm text-muted-foreground">عدد العمليات</p>
 
-          <h2 className="mt-2 text-3xl font-bold">{filteredExpenses.length}</h2>
+          <h2 className="mt-2 text-3xl font-bold">{filteredincomes.length}</h2>
         </div>
       </div>
 
-      {/* Expenses Table */}
+      {/* incomes Table */}
+
       <div className="surface-card overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b p-5">
           <Button
@@ -614,24 +595,24 @@ function ExpensesPage() {
             }}
           >
             <Plus className="size-4" />
-            تسجيل مصروف
+            تسجيل إيراد
           </Button>
 
           <div>
-            <h2 className="text-lg font-bold">سجل المصروفات</h2>
+            <h2 className="text-lg font-bold">سجل الإيرادات الأخرى</h2>
 
             <p className="text-sm text-muted-foreground">
-              جميع المصروفات والدفعات التي تم تسجيلها.
+              جميع المصروفات والدفعات الأخرى التي تم تسجيلها.
             </p>
           </div>
 
-          <Badge variant="secondary">{filteredExpenses.length} عملية</Badge>
+          <Badge variant="secondary">{filteredincomes.length} عملية</Badge>
         </div>
 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-center">من دفع؟</TableHead>
+              <TableHead className="text-center">مصدر الإيراد</TableHead>
               <TableHead className="text-center">السبب</TableHead>
               <TableHead className="text-center">التصنيف</TableHead>
               <TableHead className="text-center">المبلغ</TableHead>
@@ -654,7 +635,7 @@ function ExpensesPage() {
               </TableRow>
             )}
 
-            {!loading && filteredExpenses.length === 0 && (
+            {!loading && filteredincomes.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={8}
@@ -666,37 +647,25 @@ function ExpensesPage() {
             )}
 
             {!loading &&
-              paginatedExpenses.map((expense) => (
-                <TableRow key={expense.id}>
+              paginatedincomes.map((income) => (
+                <TableRow key={income.id}>
                   <TableCell className="text-center font-medium">
-                    {expense.payerName}
+                    {income.payerName}
                   </TableCell>
-
                   <TableCell className="text-center">
-                    {expense.reason}
+                    {income.reason}
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge variant="secondary">
-                      {expense.category || "أخرى"}
+                      {income.category || "أخرى"}
                     </Badge>
                   </TableCell>
-
                   <TableCell className="text-center">
-                    {expense.amount.toLocaleString("ar-EG")} ج.م
+                    {income.amount.toLocaleString("ar-EG")} ج.م
                   </TableCell>
-
-                  <TableCell className="text-center">
-                    {formatDate(expense.paymentDate)}
-                  </TableCell>
-
-                  <TableCell className="text-center">
-                    {formatDate(expense.eventDate)}
-                  </TableCell>
-
-                  <TableCell className="text-center">
-                    {expense.notes || "-"}
-                  </TableCell>
-
+                  <TableCell className="text-center">{formatDate(income.paymentDate)}</TableCell>
+                  <TableCell className="text-center">{formatDate(income.eventDate)}</TableCell>
+                  <TableCell className="text-center">{income.notes || "-"}</TableCell>
                   <TableCell className="text-center">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -718,7 +687,7 @@ function ExpensesPage() {
                           <AlertDialogCancel>إلغاء</AlertDialogCancel>
 
                           <AlertDialogAction
-                            onClick={() => handleDelete(expense.id)}
+                            onClick={() => handleDelete(income.id)}
                           >
                             حذف
                           </AlertDialogAction>
@@ -739,26 +708,26 @@ function ExpensesPage() {
           onPageChange={setCurrentPage}
         />
 
-        {/* Create Expense Dialog */}
+        {/* Create income Dialog */}
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
-              <DialogTitle>تسجيل مصروف جديد</DialogTitle>
+              <DialogTitle>تسجيل إيراد جديد</DialogTitle>
             </DialogHeader>
 
             <div className="grid gap-4 md:grid-cols-2">
               {/* Payer */}
 
               <div className="space-y-2">
-                <Label>من دفع؟</Label>
+                <Label>مصدر الإيراد</Label>
 
                 <Input
                   placeholder="مثال: أحمد"
-                  value={expenseForm.payerName}
+                  value={incomeForm.payerName}
                   onChange={(e) =>
-                    setExpenseForm({
-                      ...expenseForm,
+                    setIncomeForm({
+                      ...incomeForm,
                       payerName: e.target.value,
                     })
                   }
@@ -771,10 +740,10 @@ function ExpensesPage() {
                 <Label>تصنيف المصروف</Label>
 
                 <Select
-                  value={expenseForm.category}
+                  value={incomeForm.category}
                   onValueChange={(value) =>
-                    setExpenseForm({
-                      ...expenseForm,
+                    setIncomeForm({
+                      ...incomeForm,
                       category: value,
                     })
                   }
@@ -784,7 +753,7 @@ function ExpensesPage() {
                   </SelectTrigger>
 
                   <SelectContent>
-                    {expenseCategories.map((category) => (
+                    {incomeCategories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
@@ -800,10 +769,10 @@ function ExpensesPage() {
 
                 <Input
                   placeholder="مثال: حجز استضافة مدرس"
-                  value={expenseForm.reason}
+                  value={incomeForm.reason}
                   onChange={(e) =>
-                    setExpenseForm({
-                      ...expenseForm,
+                    setIncomeForm({
+                      ...incomeForm,
                       reason: e.target.value,
                     })
                   }
@@ -819,10 +788,10 @@ function ExpensesPage() {
                   type="number"
                   min="0"
                   placeholder="0"
-                  value={expenseForm.amount}
+                  value={incomeForm.amount}
                   onChange={(e) =>
-                    setExpenseForm({
-                      ...expenseForm,
+                    setIncomeForm({
+                      ...incomeForm,
                       amount: e.target.value,
                     })
                   }
@@ -836,10 +805,10 @@ function ExpensesPage() {
 
                 <Input
                   type="date"
-                  value={expenseForm.paymentDate}
+                  value={incomeForm.paymentDate}
                   onChange={(e) =>
-                    setExpenseForm({
-                      ...expenseForm,
+                    setIncomeForm({
+                      ...incomeForm,
                       paymentDate: e.target.value,
                     })
                   }
@@ -847,7 +816,6 @@ function ExpensesPage() {
               </div>
 
               {/* Event Date */}
-
               <div className="space-y-2">
                 <Label>
                   تاريخ الحدث
@@ -858,10 +826,10 @@ function ExpensesPage() {
 
                 <Input
                   type="date"
-                  value={expenseForm.eventDate}
+                  value={incomeForm.eventDate}
                   onChange={(e) =>
-                    setExpenseForm({
-                      ...expenseForm,
+                    setIncomeForm({
+                      ...incomeForm,
                       eventDate: e.target.value,
                     })
                   }
@@ -875,10 +843,10 @@ function ExpensesPage() {
 
                 <Input
                   placeholder="أي تفاصيل إضافية..."
-                  value={expenseForm.notes}
+                  value={incomeForm.notes}
                   onChange={(e) =>
-                    setExpenseForm({
-                      ...expenseForm,
+                    setIncomeForm({
+                      ...incomeForm,
                       notes: e.target.value,
                     })
                   }
@@ -890,7 +858,7 @@ function ExpensesPage() {
                   إلغاء
                 </Button>
 
-                <Button onClick={handleCreateExpense}>حفظ المصروف</Button>
+                <Button onClick={handleCreateincome}>حفظ الإيراد</Button>
               </DialogFooter>
             </div>
           </DialogContent>

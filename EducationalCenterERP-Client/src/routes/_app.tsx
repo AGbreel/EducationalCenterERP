@@ -69,14 +69,19 @@ const nav = [
     icon: CreditCard,
   },
   {
-    to: "/scan",
-    label: "QR Scanner",
-    icon: ScanLine,
-  },
-  {
     to: "/expenses",
     label: "المصروفات",
     icon: CreditCard,
+  },
+  {
+    to: "/OtherIncomes",
+    label: "المدفوعات الأخرى",
+    icon: CreditCard,
+  },
+  {
+    to: "/scan",
+    label: "QR Scanner",
+    icon: ScanLine,
   },
 ] as const;
 

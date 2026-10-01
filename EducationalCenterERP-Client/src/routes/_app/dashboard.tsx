@@ -97,7 +97,8 @@ function DashboardPage() {
       x.status === "Present",
   );
 
-  const income = db.payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+  // const income = db.payments.reduce((sum, payment) => sum + payment.amount, 0);
 
   const stats = [
     {
@@ -126,11 +127,21 @@ function DashboardPage() {
       icon: CalendarCheck,
     },
     {
-      title: "إجمالي الإيرادات",
-      value: `${income.toLocaleString()} ج.م`,
-      icon: CreditCard,
-    },
-  ];
+  title: "إجمالي الإيرادات",
+  value: `${db.financialSummary.totalIncome.toLocaleString()} ج.م`,
+  icon: CreditCard,
+},
+{
+  title: "إجمالي المصروفات",
+  value: `${db.financialSummary.totalExpenses.toLocaleString()} ج.م`,
+  icon: CreditCard,
+},
+{
+  title: "الرصيد الحالي",
+  value: `${db.financialSummary.currentBalance.toLocaleString()} ج.م`,
+  icon: CreditCard,
+},
+];
 
   // -----------------------------
   // Pagination - المجموعات
@@ -537,13 +548,30 @@ function DashboardPage() {
 
               <Badge>{db.payments.length}</Badge>
             </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between rounded-xl bg-green-500/10 p-4">
+                <span className="font-semibold">إجمالي الإيرادات</span>
 
-            <div className="flex items-center justify-between rounded-xl bg-primary/10 p-4">
-              <span className="font-semibold">إجمالي الإيرادات</span>
+                <span className="text-xl font-bold">
+                  {db.financialSummary.totalIncome.toLocaleString()} ج.م
+                </span>
+              </div>
 
-              <span className="text-xl font-bold text-primary">
-                {income.toLocaleString()} ج.م
-              </span>
+              <div className="flex items-center justify-between rounded-xl bg-red-500/10 p-4">
+                <span className="font-semibold">إجمالي المصروفات</span>
+
+                <span className="text-xl font-bold">
+                  {db.financialSummary.totalExpenses.toLocaleString()} ج.م
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl bg-primary/10 p-4">
+                <span className="font-semibold">المتبقي في السنتر</span>
+
+                <span className="text-xl font-bold text-primary">
+                  {db.financialSummary.currentBalance.toLocaleString()} ج.م
+                </span>
+              </div>
             </div>
           </div>
         </div>

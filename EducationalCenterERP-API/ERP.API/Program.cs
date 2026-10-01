@@ -34,6 +34,8 @@ builder.Services.AddScoped<ICourseClassService, CourseClassService>();
 builder.Services.AddScoped<IStudentClassService, StudentClassService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddScoped<IOtherPaymentService, OtherPaymentService>();
+builder.Services.AddScoped<IFinancialSummaryService, FinancialSummaryService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
@@ -130,11 +132,11 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 //Swagger
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
+//}
     app.UseSwagger();
     app.UseSwaggerUI();
-}
 
 using (var scope = app.Services.CreateScope())
 {

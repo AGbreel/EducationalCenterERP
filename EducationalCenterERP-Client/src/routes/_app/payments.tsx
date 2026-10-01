@@ -106,8 +106,8 @@ function PaymentsPage() {
   const [studentFilter, setStudentFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
   const [paymentTypeFilter, setPaymentTypeFilter] = useState("all");
-  const [monthFilter, setMonthFilter] = useState(currentMonth.toString());
-  const [yearFilter, setYearFilter] = useState(currentYear.toString());
+  const [monthFilter, setMonthFilter] = useState("all");
+  const [yearFilter, setYearFilter] = useState("all");
 
   // =========================
   // Pagination
@@ -236,12 +236,12 @@ function PaymentsPage() {
       }
 
       // Month
-      if (payment.month.toString() !== monthFilter) {
+      if (monthFilter !== "all" && payment.month.toString() !== monthFilter) {
         return false;
       }
 
       // Year
-      if (payment.year.toString() !== yearFilter) {
+      if (yearFilter !== "all" && payment.year.toString() !== yearFilter) {
         return false;
       }
 
@@ -537,7 +537,6 @@ function PaymentsPage() {
           </div>
 
           {/* Month */}
-
           <div className="space-y-2">
             <Label>الشهر</Label>
 
@@ -553,6 +552,7 @@ function PaymentsPage() {
               </SelectTrigger>
 
               <SelectContent>
+                <SelectItem value="all">كل الشهور</SelectItem>
                 {months.map((month, index) => (
                   <SelectItem key={index} value={(index + 1).toString()}>
                     {month}
@@ -563,18 +563,36 @@ function PaymentsPage() {
           </div>
 
           {/* Year */}
-
           <div className="space-y-2">
             <Label>السنة</Label>
 
-            <Input
-              type="number"
+            <Select
               value={yearFilter}
-              onChange={(e) => {
-                setYearFilter(e.target.value);
+              onValueChange={(value) => {
+                setYearFilter(value);
                 resetPage();
               }}
-            />
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="اختر السنة" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">كل السنوات</SelectItem>
+
+                {Array.from(
+                  new Set(
+                    db.payments.map((payment) => payment.year.toString()),
+                  ),
+                )
+                  .sort((a, b) => Number(b) - Number(a))
+                  .map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -633,14 +651,14 @@ function PaymentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>الطالب</TableHead>
-                <TableHead>المادة</TableHead>
-                <TableHead>المجموعة</TableHead>
-                <TableHead>النوع</TableHead>
-                <TableHead>الشهر</TableHead>
-                <TableHead>المبلغ</TableHead>
-                <TableHead>الطريقة</TableHead>
-                <TableHead>التاريخ</TableHead>
+                <TableHead className="text-center">الطالب</TableHead>
+                <TableHead className="text-center">المادة</TableHead>
+                <TableHead className="text-center">المجموعة</TableHead>
+                <TableHead className="text-center">النوع</TableHead>
+                <TableHead className="text-center">الشهر</TableHead>
+                <TableHead className="text-center">المبلغ</TableHead>
+                <TableHead className="text-center">الطريقة</TableHead>
+                <TableHead className="text-center">التاريخ</TableHead>
                 <TableHead className="text-center">حذف</TableHead>
               </TableRow>
             </TableHeader>
@@ -659,15 +677,18 @@ function PaymentsPage() {
 
               {paginatedPayments.map((payment) => (
                 <TableRow key={payment.id}>
-                  <TableCell className="font-medium">
+                  <TableCell className="text-center font-medium">
                     {payment.studentName}
                   </TableCell>
 
-                  <TableCell>{payment.subjectName || "-"}</TableCell>
+                  <TableCell className="text-center">
+                    {payment.subjectName || "-"}
+                  </TableCell>
 
-                  <TableCell>{payment.className || "-"}</TableCell>
-
-                  <TableCell>
+                  <TableCell className="text-center">
+                    {payment.className || "-"}
+                  </TableCell>
+                  <TableCell className="text-center">
                     <Badge
                       variant={
                         payment.paymentType === "Monthly"
@@ -679,17 +700,18 @@ function PaymentsPage() {
                     </Badge>
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell className="text-center">
                     {months[payment.month - 1]} {payment.year}
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell className="text-center">
                     {payment.amount.toLocaleString("ar-EG")} ج.م
                   </TableCell>
 
-                  <TableCell>{payment.paymentMethod}</TableCell>
-
-                  <TableCell>
+                  <TableCell className="text-center">
+                    {payment.paymentMethod}
+                  </TableCell>
+                  <TableCell className="text-center">
                     {new Date(payment.paymentDate).toLocaleDateString("ar-EG")}
                   </TableCell>
 
@@ -909,7 +931,6 @@ function PaymentsPage() {
               </div>
 
               {/* Amount */}
-
               <div className="space-y-2">
                 <Label>المبلغ</Label>
 
@@ -927,7 +948,6 @@ function PaymentsPage() {
               </div>
 
               {/* Sessions Count */}
-
               {paymentForm.paymentType === "Session" && (
                 <div className="space-y-2">
                   <Label>عدد الحصص</Label>
@@ -947,7 +967,6 @@ function PaymentsPage() {
               )}
 
               {/* Month */}
-
               <div className="space-y-2">
                 <Label>الشهر</Label>
 
@@ -965,6 +984,7 @@ function PaymentsPage() {
                   </SelectTrigger>
 
                   <SelectContent>
+                    <SelectItem value="all">كل الشهور</SelectItem>
                     {months.map((month, index) => (
                       <SelectItem key={index} value={(index + 1).toString()}>
                         {month}
@@ -975,24 +995,39 @@ function PaymentsPage() {
               </div>
 
               {/* Year */}
-
               <div className="space-y-2">
                 <Label>السنة</Label>
 
-                <Input
-                  type="number"
-                  value={paymentForm.year}
-                  onChange={(e) =>
-                    setPaymentForm((prev) => ({
-                      ...prev,
-                      year: Number(e.target.value),
-                    }))
-                  }
-                />
+                <Select
+                  value={yearFilter}
+                  onValueChange={(value) => {
+                    setYearFilter(value);
+                    resetPage();
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر السنة" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="all">كل السنوات</SelectItem>
+
+                    {Array.from(
+                      new Set(
+                        db.payments.map((payment) => payment.year.toString()),
+                      ),
+                    )
+                      .sort((a, b) => Number(b) - Number(a))
+                      .map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Payment Method */}
-
               <div className="space-y-2">
                 <Label>طريقة الدفع</Label>
 
@@ -1011,18 +1046,14 @@ function PaymentsPage() {
 
                   <SelectContent>
                     <SelectItem value="Cash">نقدي</SelectItem>
-
                     <SelectItem value="Visa">فيزا</SelectItem>
-
                     <SelectItem value="InstaPay">InstaPay</SelectItem>
-
                     <SelectItem value="VodafoneCash">Vodafone Cash</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Notes */}
-
               <div className="space-y-2 md:col-span-2">
                 <Label>ملاحظات</Label>
 
@@ -1039,7 +1070,6 @@ function PaymentsPage() {
               </div>
 
               {/* Footer */}
-
               <DialogFooter className="md:col-span-2">
                 <Button variant="outline" onClick={() => setOpen(false)}>
                   إلغاء

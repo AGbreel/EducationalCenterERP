@@ -69,6 +69,26 @@ export type CreateExpenseDto = {
   eventDate?: string | null;
   notes?: string | null;
 };
+export type OtherIncome = {
+  id: string;
+  payerName: string;
+  reason: string;
+  category?: string | null;
+  amount: number;
+  paymentDate: string;
+  eventDate?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+};
+export type CreateOtherIncomeDto = {
+  payerName: string;
+  reason: string;
+  category?: string | null;
+  amount: number;
+  paymentDate: string;
+  eventDate?: string | null;
+  notes?: string | null;
+};
 export type courseClasses = {
   id: string;
   name: string;
@@ -105,6 +125,13 @@ export type StudentAttendanceLookup = {
   studentCode: string;
   classes: StudentClassLookup[];
 };
+export type FinancialSummary = {
+  studentPayments: number;
+  otherPayments: number;
+  totalIncome: number;
+  totalExpenses: number;
+  currentBalance: number;
+};
 export type DB = {
   students: Student[];
   teachers: Teacher[];
@@ -113,6 +140,7 @@ export type DB = {
   attendance: Attendance[];
   payments: Payment[];
   courseClasses: courseClasses[];
+  financialSummary: FinancialSummary;
 };
 export const emptyDb: DB = {
   students: [],
@@ -122,6 +150,13 @@ export const emptyDb: DB = {
   attendance: [],
   payments: [],
   courseClasses: [],
+  financialSummary: {
+    studentPayments: 0,
+    otherPayments: 0,
+    totalIncome: 0,
+    totalExpenses: 0,
+    currentBalance: 0,
+  },
 };
 
 const str = (v: unknown, fallback = "") =>
@@ -279,6 +314,21 @@ function toExpense(raw: unknown): Expense {
     createdAt: str(field(raw, "createdAt")),
   };
 }
+function toOtherIncome(raw: unknown): OtherIncome {
+  return {
+    id: str(field(raw, "id")),
+    payerName: str(field(raw, "payerName")),
+    reason: str(field(raw, "reason")),
+    category:
+      field(raw, "category") == null ? null : str(field(raw, "category")),
+    amount: num(field(raw, "amount")),
+    paymentDate: str(field(raw, "paymentDate")),
+    eventDate:
+      field(raw, "eventDate") == null ? null : str(field(raw, "eventDate")),
+    notes: field(raw, "notes") == null ? null : str(field(raw, "notes")),
+    createdAt: str(field(raw, "createdAt")),
+  };
+}
 
 const list = async <T>(
   path: string,
@@ -293,15 +343,22 @@ const list = async <T>(
 
 /** يحمّل كل البيانات من الـ API. */
 export async function fetchDb(): Promise<DB> {
-  const [students, teachers, subjects, courseClasses] = await Promise.all([
+  const [
+    students,
+    teachers,
+    subjects,
+    courseClasses,
+    payments,
+    financialSummary,
+  ] = await Promise.all([
     list("/students", toStudent),
     list("/teachers", toTeacher),
     list("/subjects", toSubject),
     list("/classes", toCourseClass),
     list("/payments", toPayment),
+    request<FinancialSummary>("/financial/summary"),
   ]);
-
-  const [enrollmentsNested, attendanceNested, payments] = await Promise.all([
+  const [enrollmentsNested, attendanceNested] = await Promise.all([
     Promise.all(
       students.map((s) =>
         list(`/student-classes/student/${s.id}`, toEnrollment),
@@ -310,7 +367,6 @@ export async function fetchDb(): Promise<DB> {
     Promise.all(
       students.map((s) => list(`/attendance/student/${s.id}`, toAttendance)),
     ),
-    list("/payments", toPayment),
   ]);
 
   const enrollments = enrollmentsNested.flatMap((rows, idx) =>
@@ -337,6 +393,7 @@ export async function fetchDb(): Promise<DB> {
     attendance,
     payments,
     courseClasses,
+    financialSummary,
   };
 }
 
@@ -622,7 +679,6 @@ export const api = {
   async getExpenses(): Promise<Expense[]> {
     return list("/expenses", toExpense);
   },
-
   async addExpense(dto: CreateExpenseDto): Promise<Expense> {
     const created = await request<unknown>("/expenses", {
       method: "POST",
@@ -633,7 +689,6 @@ export const api = {
 
     return toExpense(created ?? {});
   },
-
   async removeExpense(id: string) {
     await request(`/expenses/${id}`, {
       method: "DELETE",
@@ -641,11 +696,30 @@ export const api = {
 
     changed();
   },
-
   async getExpensesTotal(): Promise<number> {
     const result = await request<unknown>("/expenses/total");
 
     return num(field(result, "totalExpenses"));
+  },
+  async getOtherIncomes(): Promise<OtherIncome[]> {
+    return list("/other-income", toOtherIncome);
+  },
+  async addOtherIncome(dto: CreateOtherIncomeDto): Promise<OtherIncome> {
+    const created = await request<unknown>("/other-income", {
+      method: "POST",
+      body: dto,
+    });
+
+    changed();
+
+    return toOtherIncome(created ?? {});
+  },
+  async removeOtherIncome(id: string) {
+    await request(`/other-income/${id}`, {
+      method: "DELETE",
+    });
+
+    changed();
   },
 };
 

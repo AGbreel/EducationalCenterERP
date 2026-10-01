@@ -203,8 +203,6 @@ namespace ERP.Infrastructure.Services
                 })
                 .ToListAsync();
         }
-
-
         public async Task<List<PaymentDto>> GetStudentClassPaymentsAsync(Guid studentClassId)
         {
             return await _context.Payments
@@ -253,15 +251,11 @@ namespace ERP.Infrastructure.Services
                 })
                 .ToListAsync();
         }
-
-
         public async Task<decimal> GetIncomeAsync()
         {
             return await _context.Payments
                 .SumAsync(x => x.Amount);
         }
-
-
         public async Task<bool> DeleteAsync(Guid id)
         {
             var payment = await _context.Payments
