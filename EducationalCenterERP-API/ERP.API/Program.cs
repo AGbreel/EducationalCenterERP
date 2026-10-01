@@ -80,13 +80,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReact", policy =>
     {
         policy
-            .WithOrigins(
-                "http://localhost:5173",
-                "https://educational-center-erp.vercel.app",
-                "https://educational-center-39gzgzu0q-ahmed-gbreels-projects.vercel.app",
-                "https://educational-center-lexnfmild-ahmed-gbreels-projects.vercel.app",
-                "https://educational-center-dgsmgzej8-ahmed-gbreels-projects.vercel.app"
-            )
+            .SetIsOriginAllowed(origin => 
+                origin.StartsWith("http://localhost:") || 
+                origin.EndsWith(".vercel.app"))
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -151,7 +147,6 @@ using (var scope = app.Services.CreateScope())
 app.UseHttpsRedirection();
 app.UseCors("AllowReact");
 app.UseStaticFiles();
-;
 app.UseAuthentication();
 app.UseAuthorization();
 
