@@ -161,7 +161,7 @@ function AppLayout() {
             <Menu className="size-5" />
           </Button>
         </header>
-        <main className="flex-1 p-5 lg:overflow-y-auto lg:p-8">
+        <main className="flex-1 p-5 lg:overflow-y-auto lg:p-8 overflow-x-hidden">
           <Outlet />
         </main>
       </div>

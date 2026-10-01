@@ -371,10 +371,10 @@ function DashboardPage() {
       </section>
 
       {/* الحضور والمدفوعات */}
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section className="grid min-w-0 gap-6 xl:grid-cols-2">
         {/* آخر عمليات الحضور */}
-        <div className="surface-card p-6">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="surface-card min-w-0 p-6">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-bold">آخر عمليات الحضور</h2>
 
@@ -396,9 +396,9 @@ function DashboardPage() {
             {paginatedAttendance.map((attendance) => (
               <div
                 key={attendance.id}
-                className="flex items-center justify-between rounded-xl border p-4 transition hover:bg-muted/40"
+                className="flex min-w-0 items-center justify-between gap-3 rounded-xl border p-4 transition hover:bg-muted/40"
               >
-                <div>
+                <div className="min-w-0">
                   <h3 className="font-semibold">{attendance.studentName}</h3>
 
                   <p className="text-sm text-muted-foreground">
@@ -412,7 +412,7 @@ function DashboardPage() {
                   </p>
                 </div>
 
-                <Badge>{attendance.status}</Badge>
+                <Badge className="shrink-0">{attendance.status}</Badge>
               </div>
             ))}
           </div>
@@ -425,8 +425,8 @@ function DashboardPage() {
         </div>
 
         {/* آخر المدفوعات */}
-        <div className="surface-card p-6">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="surface-card min-w-0 p-6">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-bold">آخر المدفوعات</h2>
 
@@ -453,9 +453,9 @@ function DashboardPage() {
               return (
                 <div
                   key={payment.id}
-                  className="flex items-center justify-between rounded-xl border p-4 transition hover:bg-muted/40"
+                  className="flex min-w-0 items-center justify-between gap-3 rounded-xl border p-4 transition hover:bg-muted/40"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="font-semibold">
                       {student?.fullName ?? "طالب"}
                     </h3>
@@ -469,7 +469,9 @@ function DashboardPage() {
                     </p>
                   </div>
 
-                  <Badge className="text-base">{payment.amount} ج.م</Badge>
+                  <Badge className="shrink-0 text-base">
+                    {payment.amount} ج.م
+                  </Badge>
                 </div>
               );
             })}
